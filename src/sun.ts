@@ -116,7 +116,6 @@ export function sun_grid(geo: GeoCoord, start_time: Temporal.Instant, steps_per_
     let j = J_0;
     const step_size = 1 / steps_per_day;
 
-    let time = start_time;
     for (let day = 0; day < 365; day++) {
         j = J_0 + day;
         for (let step = 0; step < steps_per_day; step++) {
