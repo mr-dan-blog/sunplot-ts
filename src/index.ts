@@ -47,12 +47,13 @@ function make_image() {
     draw_to_canvas(color_grid, canvas);
 }
 
-var profile = function(f: Function) {
-    return function() {
+
+var profile = function (f: Function) {
+    return function () {
         const timer_start = performance.now();
         const out = f.apply(arguments);
         const timer_end = performance.now();
-        console.debug(f.name + ": ", timer_end-timer_start);
+        console.debug(f.name + ": ", timer_end - timer_start);
         return out;
     }
 }
@@ -63,5 +64,5 @@ calc_btn.addEventListener("click", profile(calculate_sun));
 const draw_btn = document.getElementById("draw")!;
 draw_btn.addEventListener("click", profile(make_image));
 
-let calculated_grid: Array<Array<SkyCoord>>;
+let calculated_grid: SkyCoord[][];
 

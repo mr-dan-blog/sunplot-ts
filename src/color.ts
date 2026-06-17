@@ -1,8 +1,6 @@
 
 import Color from "colorjs.io";
-import type { SkyCoord } from "./sun";
-
-
+import type { SkyCoord } from "./sun";;
 
 export namespace Colors {
     export type Params = {
@@ -56,7 +54,8 @@ export namespace Colors {
         }
     }
 
-    export function from(grid: Array<Array<SkyCoord>>, color_options: Params): Array<Array<string>> {
+
+    export function from(grid: SkyCoord[][], color_options: Params): Array<Array<string>> {
         const days = grid.length;
         const steps_per_day = grid[0].length;
 
