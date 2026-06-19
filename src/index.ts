@@ -1,11 +1,11 @@
 import { Temporal } from "temporal-polyfill";
 
 import type { GeoCoord, SkyCoord } from "./sun";
-import { sun_grid } from "./sun";
+import { sun_grid } from "./sun_gpu";
 
 import { Colors } from "./color";
 
-function calculate_sun() {
+async function calculate_sun() {
     const geo: GeoCoord = {
         lat: +(document.getElementById("lat") as HTMLInputElement).value,
         lon: +(document.getElementById("lon") as HTMLInputElement).value!
@@ -13,7 +13,7 @@ function calculate_sun() {
     const start_time = document.getElementById("start-time") as HTMLInputElement;
     const time = start_time.value + "Z";
 
-    calculated_grid = sun_grid(geo, Temporal.Instant.from(time), 288);
+    calculated_grid = await sun_grid(geo, Temporal.Instant.from(time));
 }
 
 function draw_to_canvas(color_grid: Array<Array<string>>, canvas: HTMLCanvasElement): void {
@@ -22,7 +22,7 @@ function draw_to_canvas(color_grid: Array<Array<string>>, canvas: HTMLCanvasElem
 
     canvas.width = days;
     canvas.height = steps_per_day;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d", {alpha: false})!;
 
     for (let day = 0; day < days; day++) {
         for (let step = 0; step < steps_per_day; step++) {
@@ -53,7 +53,7 @@ var profile = function (f: Function) {
         const timer_start = performance.now();
         const out = f.apply(arguments);
         const timer_end = performance.now();
-        console.debug(f.name + ": ", timer_end - timer_start);
+        console.debug(f.name + ": ", (timer_end - timer_start).toFixed(1));
         return out;
     }
 }
