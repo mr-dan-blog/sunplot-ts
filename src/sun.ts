@@ -71,6 +71,12 @@ namespace Sun {
         lon: number
     };
 
+    export type Params = {
+        geo: GeoCoord,
+        start_time: string,
+        utc: boolean
+    };
+
     export type SkyCoord = {
         azimuth: number,
         altitude: number
@@ -84,16 +90,18 @@ namespace Sun {
     export const SkyGridSchema = d.arrayOf(d.arrayOf(SkyCoordSchema, 288), 365);
     export type SkyGridBuffer = TgpuMutable<typeof Sun.SkyGridSchema>;
 
-    export async function grid(geo: GeoCoord, start_time: Temporal.Instant, GPU: TgpuRoot) {
+    export async function grid(params: Params, GPU: TgpuRoot) {
+        const start_time = Temporal.Instant.from(params.start_time + "Z");
+
         const J_0 = julian_date(start_time);
         const J_0_whole = d.i32(Math.trunc(J_0));
         const J_0_frac = J_0 - d.f32(J_0_whole);
 
         const step_size = d.f32(1 / 288);
 
-        const lon = std.radians(geo.lon);
-        const sin_lat = std.sin(std.radians(geo.lat));
-        const cos_lat = std.cos(std.radians(geo.lat));
+        const lon = std.radians(params.geo.lon);
+        const sin_lat = std.sin(std.radians(params.geo.lat));
+        const cos_lat = std.cos(std.radians(params.geo.lat));
 
         const output_grid = GPU.createMutable(SkyGridSchema);
 

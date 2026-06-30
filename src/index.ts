@@ -7,7 +7,7 @@ import { HSL, OkHSL } from "./color_spaces";
 
 
 async function calculate_sun() {
-    calculated_grid = await Sun.grid(geo, Temporal.Instant.from(start_time), GPU);
+    calculated_grid = await Sun.grid(astro_params, GPU);
 }
 
 async function draw() {
@@ -37,16 +37,21 @@ async function calculate_and_draw() {
     draw();
 }
 
-function update_astronomy() {
-    geo = {
-        lat: +fields["lat"].value,
-        lon: +fields["lon"].value
-    };
-    start_time = fields["start-time"].value + "Z";
-    calculate_and_draw();
+function update_astronomy(render?: boolean) {
+    astro_params = {
+        geo: {
+            lat: +fields["lat"].value,
+            lon: +fields["lon"].value
+        },
+        start_time: fields["start-time"].value,
+        utc: fields["utc"].checked
+    }
+    if (render) {
+        calculate_and_draw();
+    }
 }
 
-function update_colors() {
+function update_colors(render?: boolean) {
     color_params = {
         black: +fields["black"].value,
         h_1: +fields["h_1"].value,
@@ -57,7 +62,9 @@ function update_colors() {
         hue_shift: +fields["hue"].value,
         mirror_hue: fields["mirror_hue"].checked ? 1 : 0,
     }
-    draw();
+    if (render) {
+        draw();
+    }
 }
 
 
@@ -73,7 +80,7 @@ interface HTMLInputDict {
     [key: string]: HTMLInputElement
 }
 
-const astro_fields = ["lat", "lon", "start-time"];
+const astro_fields = ["lat", "lon", "start-time", "utc"];
 const color_fields = ["black", "h_1", "h_2", "white", "gap", "model", "hue", "mirror_hue"];
 
 let fields: HTMLInputDict = {};
@@ -81,33 +88,19 @@ astro_fields.concat(color_fields).forEach((id) => {
     fields[id] = document.getElementById(id) as HTMLInputElement;
 });
 
-let geo: Sun.GeoCoord = {
-    lat: +fields["lat"].value,
-    lon: +fields["lon"].value
-};
-
-let start_time = fields["start-time"].value + "Z";
-
-let color_params: Render.Params = {
-    black: +fields["black"].value,
-    h_1: +fields["h_1"].value,
-    h_2: +fields["h_2"].value,
-    white: +fields["white"].value,
-    gap: +fields["gap"].value,
-    model: fields["model"].value.toLowerCase() == "okhsl" ? OkHSL.ID : HSL.ID,
-    hue_shift: +fields["hue"].value,
-    mirror_hue: fields["mirror_hue"].checked ? 1 : 0,
-}
-
 function set_onchange() {
     astro_fields.forEach((field) => {
-        fields[field].addEventListener("change", update_astronomy);
+        fields[field].addEventListener("change", () => { update_astronomy(true) });
     });
     color_fields.forEach((field) => {
-        fields[field].addEventListener("change", update_colors);
+        fields[field].addEventListener("change", () => { update_colors(true) });
     });
 }
 
 // init
 set_onchange();
+let astro_params: Sun.Params;
+update_astronomy(false);
+let color_params: Render.Params;
+update_colors(false);
 calculate_and_draw();
