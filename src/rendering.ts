@@ -78,7 +78,7 @@ namespace Render {
         const make_colors = GPU.createGuardedComputePipeline(
             (step, day) => {
                 'use gpu';
-                // swap indices because images are drawn row-by-row
+                // swap indices because images are row major
                 pixels.$[step][day] = color_of(sun.$[day][step], params.$);
             }
         );
