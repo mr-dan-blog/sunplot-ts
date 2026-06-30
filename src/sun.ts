@@ -91,7 +91,11 @@ namespace Sun {
     export type SkyGridBuffer = TgpuMutable<typeof Sun.SkyGridSchema>;
 
     export async function grid(params: Params, GPU: TgpuRoot) {
-        const start_time = Temporal.Instant.from(params.start_time + "Z");
+        let start_time = Temporal.Instant.from(params.start_time + "Z");
+        if (!params.utc) {
+            const offset = Math.trunc(params.geo.lon / 360 * 24*60); // number of minutes to offset
+            start_time = start_time.add(Temporal.Duration.from("PT" + offset + "M"))
+        }
 
         const J_0 = julian_date(start_time);
         const J_0_whole = d.i32(Math.trunc(J_0));
@@ -108,7 +112,6 @@ namespace Sun {
         const program = GPU.createGuardedComputePipeline(
             (step, day) => {
                 'use gpu';
-                // const J = J_0 + d.f32(day) + step_size * d.f32(step);
                 const J_whole = J_0_whole + d.i32(day);
                 const J_frac = J_0_frac + step_size * d.f32(step);
                 const z = SkyCoordSchema(altitude_azimuth(J_whole, J_frac, lon, sin_lat, cos_lat));

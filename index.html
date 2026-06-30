@@ -13,16 +13,17 @@
         <legend>Astronomy</legend>
         Coordinates
         <br>
-        <input name="latitude" id="lat" type="text" value="42.4" pattern="-?\d?\d(\.\d+)?" inputmode="decimal" required />
+        <input name="latitude" id="lat" type="text" value="42.4" pattern="-?\d?\d(\.\d+)?" inputmode="decimal" required style="width: 74px;" />
         <label for="lat">°N</label>
 
-        <input name="longitude" id="lon" type="text" value="71" pattern="-?1?\d?\d(\.\d+)?" inputmode="decimal" required />
+        <input name="longitude" id="lon" type="text" value="71" pattern="-?1?\d?\d(\.\d+)?" inputmode="decimal" required style="width: 74px;" />
         <label for="lon">°W</label>
         <br>
         <label for="start-time">Start time: </label>
-        <input type="datetime-local" id="start-time" value="2026-01-01T04:44" required> (UTC)
+        <input type="datetime-local" id="start-time" value="2026-01-01T00:00" required> (UTC)
         <br>
-        <!-- <input id="calculate" type="submit" value="Calculate"> -->
+        <input name="utc" id="utc" type="checkbox">
+        <label for="utc">Use UTC (off: local solar time)</label>
     </fieldset>
     <fieldset>
         <legend>Color</legend>
@@ -50,8 +51,8 @@
         <br>
         <label for="hue">Hue shift: </label>
         <input name="hue" id="hue" type="number" value="120" min="0" max="360" step="15" inputmode="numeric" required />
-        <label for="mirror_hue">Mirror</label>
         <input name="mirror_hue" id="mirror_hue" type="checkbox">
+        <label for="mirror_hue">Mirror</label>
         <br>
         <!-- <input id="draw" type="submit" value="Draw"> -->
     </fieldset>
