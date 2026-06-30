@@ -1,5 +1,4 @@
 import { tgpu } from "typegpu";
-import { Temporal } from "temporal-polyfill";
 
 import Sun from "./sun";
 import Render from "./rendering";
