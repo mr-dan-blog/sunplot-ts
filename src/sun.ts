@@ -70,7 +70,7 @@ function altitude_azimuth(J_whole: number, J_frac: number, lon: number, sin_lat:
     return Sun.SkyCoordSchema({ azimuth: std.degrees(A), altitude: std.degrees(h) });
 }
 
-export namespace Sun {
+namespace Sun {
     export type GeoCoord = {
         lat: number,
         lon: number
@@ -133,3 +133,5 @@ export namespace Sun {
         return output_grid;
     }
 }
+
+export default Sun;

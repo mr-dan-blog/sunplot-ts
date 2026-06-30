@@ -1,8 +1,8 @@
 import { tgpu, d, type TgpuMutable } from "typegpu";
 import { Temporal } from "temporal-polyfill";
 
-import { Sun } from "./sun";
-import { Colors } from "./rendering";
+import Sun from "./sun";
+import Render from "./rendering";
 import { HSL, OkHSL } from "./color_spaces";
 
 
@@ -13,7 +13,7 @@ async function calculate_sun() {
 async function draw() {
     const start = performance.now();
 
-    const pixels = await Colors.texture(calculated_grid, color_params, GPU);
+    const pixels = await Render.pixels(calculated_grid, color_params, GPU);
     const packed = new Uint32Array(pixels.flat().flat());
     const unpacked = new Uint8ClampedArray(packed.buffer);
     const data = new ImageData(unpacked, 365);
@@ -88,7 +88,7 @@ let geo: Sun.GeoCoord = {
 
 let start_time = fields["start-time"].value + "Z";
 
-let color_params: Colors.Params = {
+let color_params: Render.Params = {
     black: +fields["black"].value,
     h_1: +fields["h_1"].value,
     h_2: +fields["h_2"].value,

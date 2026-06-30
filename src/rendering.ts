@@ -1,9 +1,9 @@
 
 import { d, type TgpuRoot, type TgpuMutable } from "typegpu";
-import { Sun } from "./sun";
+import Sun from "./sun";
 import { OkHSL, HSL } from "./color_spaces";
 
-export namespace Colors {
+namespace Render {
     export type Params = {
         black: number; // threshold below which all colors are treated as black
         h_1: number, // maximum "height" for dark hours
@@ -50,7 +50,7 @@ export namespace Colors {
         return rgba;
     }
 
-    export async function texture(sun: TgpuMutable<d.WgslArray<d.WgslArray<Sun.GpuSkyCoord>>>, color_options: Params, GPU: TgpuRoot) {
+    export async function pixels(sun: TgpuMutable<d.WgslArray<d.WgslArray<Sun.GpuSkyCoord>>>, color_options: Params, GPU: TgpuRoot) {
         const pixels = GPU.createMutable(d.arrayOf(d.arrayOf(d.u32, 365), 288));
         const params = GPU.createUniform(
             d.struct({
@@ -86,4 +86,6 @@ export namespace Colors {
         return await pixels.read();
     }
 }
+
+export default Render;
 
