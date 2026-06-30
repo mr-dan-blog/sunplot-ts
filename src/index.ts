@@ -1,4 +1,4 @@
-import { tgpu, d, type TgpuMutable } from "typegpu";
+import { tgpu } from "typegpu";
 import { Temporal } from "temporal-polyfill";
 
 import Sun from "./sun";
@@ -67,7 +67,7 @@ const ctx = canvas.getContext('2d', { alpha: false })!;
 
 
 // global variables
-let calculated_grid: TgpuMutable<d.WgslArray<d.WgslArray<Sun.GpuSkyCoord>>>;
+let calculated_grid: Sun.SkyGridBuffer;
 
 interface HTMLInputDict {
     [key: string]: HTMLInputElement

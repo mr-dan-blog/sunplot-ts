@@ -1,5 +1,5 @@
 import { Temporal } from "temporal-polyfill";
-import { d, std, type TgpuRoot } from "typegpu";
+import { d, std, type TgpuMutable, type TgpuRoot } from "typegpu";
 
 // Sun calculations based on https://aa.quae.nl/en/reken/zonpositie.html
 
@@ -76,11 +76,6 @@ namespace Sun {
         lon: number
     };
 
-    export type GpuSkyCoord = d.WgslStruct<{
-        azimuth: d.F32;
-        altitude: d.F32;
-    }>;
-
     export type SkyCoord = {
         azimuth: number,
         altitude: number
@@ -91,12 +86,8 @@ namespace Sun {
         altitude: d.f32
     });
 
-    export const GeoCoordSchema = d.struct({
-        lat: d.f32,
-        lon: d.f32
-    });
-
-    const SunGridSchema = d.arrayOf(d.arrayOf(SkyCoordSchema, 288), 365);
+    export const SkyGridSchema = d.arrayOf(d.arrayOf(SkyCoordSchema, 288), 365);
+    export type SkyGridBuffer = TgpuMutable<typeof Sun.SkyGridSchema>;
 
     export async function grid(geo: GeoCoord, start_time: Temporal.Instant, GPU: TgpuRoot) {
         const J_0 = julian_date(start_time);
@@ -109,13 +100,7 @@ namespace Sun {
         const sin_lat = std.sin(std.radians(geo.lat));
         const cos_lat = std.cos(std.radians(geo.lat));
 
-        // const geo_radians: GeoCoord = {lat: std.radians(geo.lat), lon: std.radians(geo.lon)};
-        // const gpu_geo = GPU.createUniform(GeoCoordSchema, GeoCoordSchema(geo_radians))
-
-        const output_grid = GPU.createMutable(SunGridSchema);
-
-        // ToDo precompute sin(geo.lat) and cos(geo.lat) to pass in
-        // ToDo use integers to get accurate J_0 even when far from 2000
+        const output_grid = GPU.createMutable(SkyGridSchema);
 
         const program = GPU.createGuardedComputePipeline(
             (step, day) => {

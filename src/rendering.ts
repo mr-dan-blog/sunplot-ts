@@ -1,5 +1,5 @@
 
-import { d, type TgpuRoot, type TgpuMutable } from "typegpu";
+import { d, type TgpuRoot } from "typegpu";
 import Sun from "./sun";
 import { OkHSL, HSL } from "./color_spaces";
 
@@ -50,7 +50,7 @@ namespace Render {
         return rgba;
     }
 
-    export async function pixels(sun: TgpuMutable<d.WgslArray<d.WgslArray<Sun.GpuSkyCoord>>>, color_options: Params, GPU: TgpuRoot) {
+    export async function pixels(sun: Sun.SkyGridBuffer, color_options: Params, GPU: TgpuRoot) {
         const pixels = GPU.createMutable(d.arrayOf(d.arrayOf(d.u32, 365), 288));
         const params = GPU.createUniform(
             d.struct({
