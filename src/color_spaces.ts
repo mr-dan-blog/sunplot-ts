@@ -76,31 +76,32 @@ namespace OK {
     export function oklab_to_linear_srgb(Lab: d.v3f) {
         'use gpu';
 
-        let lms = Lab.mul(d.mat3x3f(
-            0.99999999845051981432, 0.39633779217376785678, 0.21580375806075880339,
-            1.0000000088817607767, -0.1055613423236563494, -0.063854174771705903402,
-            1.0000000546724109177, -0.089484182094965759684, -1.2914855378640917399
-        ));
-        lms = std.mul(lms, std.mul(lms, lms)); // cube each component
-        const xyz = lms.mul(d.mat3x3f(
-            1.2268798733741557, -0.5578149965554813, 0.28139105017721583,
-            -0.04057576262431372, 1.1122868293970594, -0.07171106666151701,
-            -0.07637294974672142, -0.4214933239627914, 1.5869240244272418
-        ));
-
-        return xyz.mul(d.mat3x3f(
-            3.2409699419045226, -1.537383177570094, -0.4986107602930034,
-            -0.9692436362808796, 1.8759675015077202, 0.04155505740717559,
-            0.05563007969699366, -0.20397695888897652, 1.0569715142428786
-        ));
+        let lms = Lab.mul(
+            d.mat3x3f( // Lab to lms
+                0.99999999845051981432, 0.39633779217376785678, 0.21580375806075880339,
+                1.0000000088817607767, -0.1055613423236563494, -0.063854174771705903402,
+                1.0000000546724109177, -0.089484182094965759684, -1.2914855378640917399
+            )
+        );
+        lms = lms.mul(lms).mul(lms); // cube each component
+        return lms.mul(
+            d.mat3x3f( // lms to xyz
+                1.2268798733741557, -0.5578149965554813, 0.28139105017721583,
+                -0.04057576262431372, 1.1122868293970594, -0.07171106666151701,
+                -0.07637294974672142, -0.4214933239627914, 1.5869240244272418
+            )
+        ).mul(
+            d.mat3x3f( // xyz to linear srgb
+                3.2409699419045226, -1.537383177570094, -0.4986107602930034,
+                -0.9692436362808796, 1.8759675015077202, 0.04155505740717559,
+                0.05563007969699366, -0.20397695888897652, 1.0569715142428786
+            )
+        );
     }
 
     function toe_inv(x: number) {
         'use gpu';
-        const k_1 = 0.206;
-        const k_2 = 0.03;
-        const k_3 = (1 + k_1) / (1 + k_2);
-        return (x * x + k_1 * x) / (k_3 * (x + k_2));
+        return x * (x + 0.206) * 0.854 / (x + 0.03);
     }
 
     // Finds the maximum saturation possible for a given hue that fits in sRGB
@@ -155,12 +156,12 @@ namespace OK {
     function find_cusp(a: number, b: number) {
         'use gpu';
         // First, find the maximum saturation (saturation S = C/L)
-        let S_cusp = compute_max_saturation(a, b);
+        const S_cusp = compute_max_saturation(a, b);
 
         // Convert to linear sRGB to find the first point where at least one of r,g or b >= 1:
-        let rgb_at_max = oklab_to_linear_srgb(d.vec3f(1.0, S_cusp * a, S_cusp * b));
-        let L_cusp = std.pow(1 / std.max(rgb_at_max[0], rgb_at_max[1], rgb_at_max[2]), 1 / 3);
-        let C_cusp = L_cusp * S_cusp;
+        const rgb_at_max = oklab_to_linear_srgb(d.vec3f(1.0, S_cusp * a, S_cusp * b));
+        const L_cusp = std.pow(1 / std.max(rgb_at_max[0], rgb_at_max[1], rgb_at_max[2]), 1 / 3);
+        const C_cusp = L_cusp * S_cusp;
 
         return d.vec2f(L_cusp, C_cusp);
     }
@@ -169,93 +170,78 @@ namespace OK {
     // L = L0 * (1 - t) + t * L1;
     // C = t * C1;
     // a and b must be normalized so a^2 + b^2 == 1
-    // ToDo: make use matrices
     function find_gamut_intersection(a: number, b: number, L1: number, C1: number, L0: number, cusp: number[]) {
         'use gpu';
 
         // Find the intersection for upper and lower half seprately
-        let t = d.f32(0.0);
         if (((L1 - L0) * cusp[1] - (cusp[0] - L0) * C1) <= 0.0) {
             // Lower half
-            t = cusp[1] * L0 / (C1 * cusp[0] + cusp[1] * (L0 - L1));
+            const t = cusp[1] * L0 / (C1 * cusp[0] + cusp[1] * (L0 - L1));
+            return t;
         }
         else {
             // Upper half
             // First intersect with triangle
-            t = cusp[1] * (L0 - 1.0) / (C1 * (cusp[0] - 1.0) + cusp[1] * (L0 - L1));
+            let t = cusp[1] * (L0 - 1.0) / (C1 * (cusp[0] - 1.0) + cusp[1] * (L0 - L1));
 
             // Then one step Halley's method
             {
-                let dL = L1 - L0;
-                let dC = C1;
+                const dL = L1 - L0;
+                const dC = C1;
 
-                let k_l = 0.3963377774 * a + 0.2158037573 * b;
-                let k_m = -0.1055613458 * a - 0.0638541728 * b;
-                let k_s = -0.0894841775 * a - 1.2914855480 * b;
+                const k_lms = d.vec3f(
+                    0.3963377774 * a + 0.2158037573 * b,
+                    -0.1055613458 * a - 0.0638541728 * b,
+                    -0.0894841775 * a - 1.2914855480 * b
+                );
 
-                let l_dt = dL + dC * k_l;
-                let m_dt = dL + dC * k_m;
-                let s_dt = dL + dC * k_s;
+                const lms_dt = k_lms.mul(dC).add(dL);
 
 
                 // If higher accuracy is required, 2 or 3 iterations of the following block can be used:
                 {
-                    let L = L0 * (1 - t) + t * L1;
-                    let C = t * C1;
+                    const L = L0 * (1 - t) + t * L1;
+                    const C = t * C1;
 
-                    let l_ = L + C * k_l;
-                    let m_ = L + C * k_m;
-                    let s_ = L + C * k_s;
+                    const lms_ = k_lms.mul(C).add(L);
+                    const lms = lms_.mul(lms_).mul(lms_);
+                    const lmsdt = lms_dt.mul(lms_).mul(lms_).mul(3.0);
+                    const lmsdt2 = lms_dt.mul(lms_dt).mul(lms_).mul(6.0);
 
-                    let l = l_ * l_ * l_;
-                    let m = m_ * m_ * m_;
-                    let s = s_ * s_ * s_;
+                    let u_rgb = d.vec3f();
+                    let t_rgb = d.vec3f();
 
-                    let ldt = 3.0 * l_dt * l_ * l_;
-                    let mdt = 3.0 * m_dt * m_ * m_;
-                    let sdt = 3.0 * s_dt * s_ * s_;
+                    let r = d.vec3f(4.0767416621, - 3.3077115913, 0.2309699292).mul(
+                        d.mat3x3f(lms, lmsdt, lmsdt2)
+                    );
+                    r[0] -= 1;
+                    u_rgb.r = r[1] / (r[1] * r[1] - 0.5 * r[0] * r[2]);
+                    t_rgb.r = -r[0] * u_rgb.r;
 
-                    let ldt2 = 6.0 * l_dt * l_dt * l_;
-                    let mdt2 = 6.0 * m_dt * m_dt * m_;
-                    let sdt2 = 6.0 * s_dt * s_dt * s_;
+                    let g = d.vec3f(-1.2684380046, 2.6097574011, -0.3413193965).mul(
+                        d.mat3x3f(lms, lmsdt, lmsdt2)
+                    );
+                    g[0] -= 1;
+                    u_rgb.g = g[1] / (g[1] * g[1] - 0.5 * g[0] * r[2]);
+                    t_rgb.g = -g[0] * u_rgb.g;
 
-                    let r = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s - 1;
-                    let r1 = 4.0767416621 * ldt - 3.3077115913 * mdt + 0.2309699292 * sdt;
-                    let r2 = 4.0767416621 * ldt2 - 3.3077115913 * mdt2 + 0.2309699292 * sdt2;
+                    let b = d.vec3f(-0.0041960863, -0.7034186147, 1.7076147010).mul(
+                        d.mat3x3f(lms, lmsdt, lmsdt2)
+                    );
+                    b[0] -= 1;
+                    u_rgb.b = b[1] / (b[1] * b[1] - 0.5 * b[0] * b[2]);
+                    t_rgb.b = -b[0] * u_rgb.b;
 
-                    let u_r = r1 / (r1 * r1 - 0.5 * r * r2);
-                    let t_r = -r * u_r;
+                    // tried to do with vector math. Couldn't cast v3b to v3f
+                    t_rgb.r += d.f32(u_rgb.r <= 0) * 10e5;
+                    t_rgb.g += d.f32(u_rgb.g <= 0) * 10e5;
+                    t_rgb.b += d.f32(u_rgb.b <= 0) * 10e5;
 
-                    let g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s - 1;
-                    let g1 = -1.2684380046 * ldt + 2.6097574011 * mdt - 0.3413193965 * sdt;
-                    let g2 = -1.2684380046 * ldt2 + 2.6097574011 * mdt2 - 0.3413193965 * sdt2;
-
-                    let u_g = g1 / (g1 * g1 - 0.5 * g * g2);
-                    let t_g = -g * u_g;
-
-                    let b = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s - 1;
-                    let b1 = -0.0041960863 * ldt - 0.7034186147 * mdt + 1.7076147010 * sdt;
-                    let b2 = -0.0041960863 * ldt2 - 0.7034186147 * mdt2 + 1.7076147010 * sdt2;
-
-                    let u_b = b1 / (b1 * b1 - 0.5 * b * b2);
-                    let t_b = -b * u_b;
-
-                    if (u_r <= 0.0) {
-                        t_r = 10e5;
-                    }
-                    if (u_g <= 0.0) {
-                        t_g = 10e5;
-                    }
-                    if (u_b <= 0.0) {
-                        t_b = 10e5;
-                    }
-
-                    t += std.min(t_r, t_g, t_b);
+                    t += std.min(t_rgb.r, t_rgb.g, t_rgb.b);
                 }
             }
+            return t;
         }
-
-        return t;
     }
 
     function get_Cs(L: number, a_: number, b_: number) {
@@ -269,7 +255,7 @@ namespace OK {
         const T_max = cusp[1] / (1 - cusp[0]); // C/(1-L)
 
 
-        let k = C_max / std.min(L * S_max, (1.0 - L) * T_max);
+        const k = C_max / std.min(L * S_max, (1.0 - L) * T_max);
 
         let C_mid = d.f32(0);
         {
@@ -289,18 +275,18 @@ namespace OK {
                         )))
             );
 
-            let C_a = L * S_mid;
-            let C_b = (1 - L) * T_mid;
+            const C_a = L * S_mid;
+            const C_b = (1 - L) * T_mid;
 
-            C_mid = 0.9 * k * std.sqrt(std.inverseSqrt(1 / C_a ** 4 + 1 / C_b ** 4));
+            C_mid = 0.9 * k * std.sqrt(std.inverseSqrt(C_a ** -4 + C_b ** -4));
         }
 
         let C_0 = d.f32(0);
         {
-            let C_a = L * 0.4;
-            let C_b = (1 - L) * 0.8;
+            const C_a = L * 0.4;
+            const C_b = (1 - L) * 0.8;
 
-            C_0 = std.inverseSqrt(1 / (C_a * C_a) + 1 / (C_b * C_b));
+            C_0 = std.inverseSqrt(C_a ** -2 + C_b ** -2);
         }
 
         return d.vec3f(C_0, C_mid, C_max);
@@ -337,7 +323,7 @@ namespace OK {
         L = L_new;
 
         const rgb_scale = oklab_to_linear_srgb(d.vec3f(L_vt, a_ * C_vt, b_ * C_vt));
-        const scale_L = std.pow(std.max(rgb_scale.r, rgb_scale.g, rgb_scale.b), -1/3);
+        const scale_L = std.pow(std.max(rgb_scale.r, rgb_scale.g, rgb_scale.b), -1 / 3);
 
         return d.vec3f(L * scale_L, C * scale_L * a_, C * scale_L * b_);
     }
