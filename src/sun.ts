@@ -1,128 +1,135 @@
 import { Temporal } from "temporal-polyfill";
+import { d, std, type TgpuRoot } from "typegpu";
 
 // Sun calculations based on https://aa.quae.nl/en/reken/zonpositie.html
 
-const J_2000 = 2451545;
+const TAU = Math.PI * 2;
 
-function rad(n: number) {
-    return n * Math.PI / 180;
+// Not true Julian 0, but the formulae use it as such
+// Using true Julian 0 results in loss of floating point precision
+const Julian_zero = Temporal.Instant.from("2000-01-01T12:00Z");
+
+const M_0 = std.radians(357.5291); // mean anomaly on January 1, 2000
+const M_1 = std.radians(0.98560028); // derivative of mean anomaly
+
+// constants for calculating true anomaly
+const C_1 = std.radians(1.9148);
+const C_2 = std.radians(0.0200);
+const C_3 = std.radians(0.0003);
+
+const Pi_earth = std.radians(102.9373); // ecliptic longitude of Earth's perihelion
+
+// constants for calculating right ascension
+const A_2 = std.radians(-2.4657);
+const A_4 = std.radians(0.0529);
+const A_6 = std.radians(-0.0014);
+
+// constants for calculating declination
+const D_1 = std.radians(22.7908);
+const D_3 = std.radians(0.5991);
+const D_5 = std.radians(0.0492);
+
+
+const theta_0 = std.radians(280.1470); // siderial time angle on January 1, 2000
+const theta_1 = std.radians(360.9856235); // slope of siderial time
+const theta_1_frac = std.radians(0.9856235); // slope of siderial time
+
+
+function wrap(radians: number) {
+    'use gpu';
+    return std.mod(radians + TAU, TAU);
 }
 
-function deg(n: number) {
-    return n * 180 / Math.PI;
-}
-
-function sind(n: number) {
-    return Math.sin(rad(n));
-}
-
-function cosd(n: number) {
-    return Math.cos(rad(n));
-}
-
-function tand(n: number) {
-    return Math.tan(rad(n));
-}
-
-function wrap(degrees: number) {
-    return ((degrees) + 360) % 360;
-}
-
-function reference(degrees: number) {
-    return (((degrees % 360) + 180) % 360) - 180
-    // return wrap(degrees + 180) - 180;
+function reference(radians: number) {
+    'use gpu';
+    return std.mod(radians + Math.PI, TAU) - Math.PI;
 }
 
 function julian_date(date: Temporal.Instant) {
-    const Julian_zero = Temporal.Instant.from("-004713-11-24T12:00Z");
     const seconds = date.since(Julian_zero).seconds;
     return seconds / (60 * 60 * 24);
 }
 
-function mean_anomaly(J: number) {
-    const M_0 = 357.5291; // mean anomaly on January 1, 2000
-    const M_1 = 0.98560028 // derivative of mean anomaly
 
-    return wrap(M_0 + M_1 * (J - J_2000));
-}
+function altitude_azimuth(J_whole: number, J_frac: number, lon: number, sin_lat: number, cos_lat: number): Sun.SkyCoord {
+    'use gpu';
 
-function true_anomaly(M: number) {
-    const C_1 = 1.9148;
-    const C_2 = 0.0200;
-    const C_3 = 0.0003;
-    const C = C_1 * sind(M) + C_2 * sind(2 * M) + C_3 * sind(3 * M);
-    return M + C;
-}
-
-function longitude(nu: number) {
-    const Pi_earth = 102.9373;
-    return reference(nu + Pi_earth + 180);
-}
-
-function right_ascension(lambda: number) {
-    const A_2 = -2.4657;
-    const A_4 = 0.0529;
-    const A_6 = -0.0014;
-    return lambda + A_2 * sind(2 * lambda) + A_4 * sind(4 * lambda) + A_6 * sind(6 * lambda);
-}
-
-function declination(lambda: number) {
-    const D_1 = 22.7908;
-    const D_3 = 0.5991;
-    const D_5 = 0.0492;
-
-    const s = sind(lambda);
-    return (D_1 * s) + (D_3 * s ** 3) + (D_5 * s ** 5);
-}
-
-function siderial_time(J: number, lon: number) {
-    const theta_0 = 280.1470;
-    const theta_1 = 360.9856235;
-
-    return wrap(theta_0 + theta_1 * (J - J_2000) - lon);
-}
-
-export type GeoCoord = { lat: number, lon: number };
-
-export type SkyCoord = { azimuth: number, altitude: number };
-
-function altitude_azimuth(J: number, geo: GeoCoord): SkyCoord {
-    const M = mean_anomaly(J);
-
-    const nu = true_anomaly(M);
-
-    const lambda = longitude(nu);
-
-    const alpha = right_ascension(lambda);
-    const delta = declination(lambda);
-
-    const theta = siderial_time(J, geo.lon);
-
+    const M = wrap(M_0 + M_1 * d.f32(J_whole) + M_1 * J_frac); // mean anomaly
+    const nu = M + C_1 * std.sin(M) + C_2 * std.sin(2 * M) + C_3 * std.sin(3 * M); // true anomaly
+    const lambda = reference(nu + Pi_earth + Math.PI); // ecliptical longitude
+    const alpha = lambda + A_2 * std.sin(2 * lambda) + A_4 * std.sin(4 * lambda) + A_6 * std.sin(6 * lambda); // right ascension
+    const s = std.sin(lambda);
+    const delta = (D_1 * s) + (D_3 * s ** 3) + (D_5 * s ** 5); // declination
+    const theta = wrap(theta_0 + theta_1_frac * d.f32(J_whole) + theta_1 * J_frac - lon); //siderial time
     const H = theta - alpha;
 
-    let A = Math.atan2(sind(H), cosd(H) * sind(geo.lat) - tand(delta) * cosd(geo.lat));
-    A = deg(A);
+    const A = std.atan2(std.sin(H), std.cos(H) * sin_lat - std.tan(delta) * cos_lat);
 
-    let h = Math.asin(sind(geo.lat) * sind(delta) + cosd(geo.lat) * cosd(delta) * cosd(H));
-    h = deg(h);
+    const h = std.asin(sin_lat * std.sin(delta) + cos_lat * std.cos(delta) * std.cos(H));
 
-    return { azimuth: A, altitude: h };
+    return Sun.SkyCoordSchema({ azimuth: std.degrees(A), altitude: std.degrees(h) });
 }
 
-export function sun_grid(geo: GeoCoord, start_time: Temporal.Instant, steps_per_day: number): Array<Array<SkyCoord>> {
-    let grid = [...Array(365)].map(() => Array(steps_per_day));
+export namespace Sun {
+    export type GeoCoord = {
+        lat: number,
+        lon: number
+    };
 
-    const J_0 = julian_date(start_time);
-    let j = J_0;
-    const step_size = 1 / steps_per_day;
+    export type GpuSkyCoord = d.WgslStruct<{
+        azimuth: d.F32;
+        altitude: d.F32;
+    }>;
 
-    for (let day = 0; day < 365; day++) {
-        j = J_0 + day;
-        for (let step = 0; step < steps_per_day; step++) {
-            grid[day][step] = altitude_azimuth(j, geo);
-            j += step_size;
-        }
+    export type SkyCoord = {
+        azimuth: number,
+        altitude: number
+    };
+
+    export const SkyCoordSchema = d.struct({
+        azimuth: d.f32,
+        altitude: d.f32
+    });
+
+    export const GeoCoordSchema = d.struct({
+        lat: d.f32,
+        lon: d.f32
+    });
+
+    const SunGridSchema = d.arrayOf(d.arrayOf(SkyCoordSchema, 288), 365);
+
+    export async function grid(geo: GeoCoord, start_time: Temporal.Instant, GPU: TgpuRoot) {
+        const J_0 = julian_date(start_time);
+        const J_0_whole = d.i32(Math.trunc(J_0));
+        const J_0_frac = J_0 - d.f32(J_0_whole);
+
+        const step_size = d.f32(1 / 288);
+
+        const lon = std.radians(geo.lon);
+        const sin_lat = std.sin(std.radians(geo.lat));
+        const cos_lat = std.cos(std.radians(geo.lat));
+
+        // const geo_radians: GeoCoord = {lat: std.radians(geo.lat), lon: std.radians(geo.lon)};
+        // const gpu_geo = GPU.createUniform(GeoCoordSchema, GeoCoordSchema(geo_radians))
+
+        const output_grid = GPU.createMutable(SunGridSchema);
+
+        // ToDo precompute sin(geo.lat) and cos(geo.lat) to pass in
+        // ToDo use integers to get accurate J_0 even when far from 2000
+
+        const program = GPU.createGuardedComputePipeline(
+            (step, day) => {
+                'use gpu';
+                // const J = J_0 + d.f32(day) + step_size * d.f32(step);
+                const J_whole = J_0_whole + d.i32(day);
+                const J_frac = J_0_frac + step_size * d.f32(step);
+                const z = SkyCoordSchema(altitude_azimuth(J_whole, J_frac, lon, sin_lat, cos_lat));
+                output_grid.$[day][step] = SkyCoordSchema(z);
+            }
+        );
+
+        program.dispatchThreads(288, 365);
+
+        return output_grid;
     }
-
-    return grid;
 }

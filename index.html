@@ -20,38 +20,40 @@
         <label for="lon">°W</label>
         <br>
         <label for="start-time">Start time: </label>
-        <input type="datetime-local" id="start-time" required> (UTC)
+        <input type="datetime-local" id="start-time" value="2026-01-01T04:44" required> (UTC)
         <br>
-        <input id="calculate" type="submit" value="Calculate">
+        <!-- <input id="calculate" type="submit" value="Calculate"> -->
     </fieldset>
     <fieldset>
         <legend>Color</legend>
         <label for="model">Color model: </label>
         <select name="model" id="model">
             <option>Okhsl</option>
-            <option>Oklch</option>
-            <option>HSLuv</option>
+            <!-- <option>Okhsv</option> -->
             <option>HSL</option>
         </select>
         <br>
+        <label for="black">Black floor: </label>
+        <input name="black" id="black" type="number" value="0.0" min="0.0" max="0.5" step="0.01" inputmode="decimal" required />
+        <br>
         <label for="h_1">Maximum nighttime brightness: </label>
-        <input name="h_1" id="h_1" type="number" value="0.30" min="0.00" max="1.00" step="0.05" inputmode="decimal" required />
+        <input name="h_1" id="h_1" type="range" value="0.40" min="0.00" max="1.00" step="0.05" inputmode="decimal" required />
         <br>
         <label for="h_2">Minimum daytime brightness: </label>
-        <input name="h_2" id="h_2" type="number" value="0.70" min="0.00" max="1.00" step="0.05" inputmode="decimal" required />
+        <input name="h_2" id="h_2" type="range" value="0.60" min="0.00" max="1.00" step="0.05" inputmode="decimal" required />
         <br>
         <label for="gap">Day-night transition width: </label>
         <input name="gap" id="gap" type="number" value="0.05" min="0.00" max="1.00" step="0.01" inputmode="decimal" required />
         <br>
         <label for="white">White ceiling: </label>
-        <input name="white" id="white" type="number" value="0.75" min="0.5" max="1.00" step="0.01" inputmode="decimal" required />
+        <input name="white" id="white" type="number" value="0.95" min="0.5" max="1.00" step="0.01" inputmode="decimal" required />
         <br>
         <label for="hue">Hue shift: </label>
-        <input name="hue" id="hue" type="number" value="0" min="-360" max="360" step="15" inputmode="numeric" required />
+        <input name="hue" id="hue" type="number" value="120" min="0" max="360" step="15" inputmode="numeric" required />
         <label for="mirror_hue">Mirror</label>
         <input name="mirror_hue" id="mirror_hue" type="checkbox">
         <br>
-        <input id="draw" type="submit" value="Draw">
+        <!-- <input id="draw" type="submit" value="Draw"> -->
     </fieldset>
 </body>
 

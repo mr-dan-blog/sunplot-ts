@@ -1,68 +1,113 @@
+import { tgpu, d, type TgpuMutable } from "typegpu";
 import { Temporal } from "temporal-polyfill";
 
-import type { GeoCoord, SkyCoord } from "./sun";
-import { sun_grid } from "./sun_gpu";
+import { Sun } from "./sun";
+import { Colors } from "./rendering";
+import { HSL, OkHSL } from "./color_spaces";
 
-import { Colors } from "./color";
 
 async function calculate_sun() {
-    const geo: GeoCoord = {
-        lat: +(document.getElementById("lat") as HTMLInputElement).value,
-        lon: +(document.getElementById("lon") as HTMLInputElement).value!
+    calculated_grid = await Sun.grid(geo, Temporal.Instant.from(start_time), GPU);
+}
+
+async function draw() {
+    const start = performance.now();
+
+    const pixels = await Colors.texture(calculated_grid, color_params, GPU);
+    const packed = new Uint32Array(pixels.flat().flat());
+    const unpacked = new Uint8ClampedArray(packed.buffer);
+    const data = new ImageData(unpacked, 365);
+
+    const end = performance.now();
+    console.debug("calculated colors in", (end - start).toFixed(1), "ms");
+
+    requestAnimationFrame(() => {
+        ctx.putImageData(data, 0, 0);
+    });
+}
+
+async function calculate_and_draw() {
+    // const start = performance.now();
+
+    await calculate_sun();
+
+    // const end = performance.now();
+    // console.debug("calculated sun in", (end - start).toFixed(1), "ms");
+
+    draw();
+}
+
+function update_astronomy() {
+    geo = {
+        lat: +fields["lat"].value,
+        lon: +fields["lon"].value
     };
-    const start_time = document.getElementById("start-time") as HTMLInputElement;
-    const time = start_time.value + "Z";
-
-    calculated_grid = await sun_grid(geo, Temporal.Instant.from(time));
+    start_time = fields["start-time"].value + "Z";
+    calculate_and_draw();
 }
 
-function draw_to_canvas(color_grid: Array<Array<string>>, canvas: HTMLCanvasElement): void {
-    const days = color_grid.length;
-    const steps_per_day = color_grid[0].length;
-
-    canvas.width = days;
-    canvas.height = steps_per_day;
-    const ctx = canvas.getContext("2d", {alpha: false})!;
-
-    for (let day = 0; day < days; day++) {
-        for (let step = 0; step < steps_per_day; step++) {
-            ctx.fillStyle = color_grid[day][step];
-            ctx.fillRect(day, step, 1, 1);
-        }
+function update_colors() {
+    color_params = {
+        black: +fields["black"].value,
+        h_1: +fields["h_1"].value,
+        h_2: +fields["h_2"].value,
+        white: +fields["white"].value,
+        gap: +fields["gap"].value,
+        model: fields["model"].value.toLowerCase() == "okhsl" ? OkHSL.ID : HSL.ID,
+        hue_shift: +fields["hue"].value,
+        mirror_hue: fields["mirror_hue"].checked ? 1 : 0,
     }
-}
-
-function make_image() {
-    const color_params: Colors.Params = {
-        h_1: +(document.getElementById("h_1") as HTMLInputElement).value,
-        h_2: +(document.getElementById("h_2") as HTMLInputElement).value,
-        white: +(document.getElementById("white") as HTMLInputElement).value,
-        w: +(document.getElementById("gap") as HTMLInputElement).value,
-        model: (document.getElementById("model") as HTMLInputElement).value,
-        hue_shift: +(document.getElementById("hue") as HTMLInputElement).value,
-        mirror_hue: (document.getElementById("mirror_hue") as HTMLInputElement).checked,
-    }
-    const color_grid = Colors.from(calculated_grid, color_params);
-    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    draw_to_canvas(color_grid, canvas);
+    draw();
 }
 
 
-var profile = function (f: Function) {
-    return function () {
-        const timer_start = performance.now();
-        const out = f.apply(arguments);
-        const timer_end = performance.now();
-        console.debug(f.name + ": ", (timer_end - timer_start).toFixed(1));
-        return out;
-    }
+const GPU = await tgpu.init();
+const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+const ctx = canvas.getContext('2d', { alpha: false })!;
+
+
+// global variables
+let calculated_grid: TgpuMutable<d.WgslArray<d.WgslArray<Sun.GpuSkyCoord>>>;
+
+interface HTMLInputDict {
+    [key: string]: HTMLInputElement
 }
 
-const calc_btn = document.getElementById("calculate")!;
-calc_btn.addEventListener("click", profile(calculate_sun));
+const astro_fields = ["lat", "lon", "start-time"];
+const color_fields = ["black", "h_1", "h_2", "white", "gap", "model", "hue", "mirror_hue"];
 
-const draw_btn = document.getElementById("draw")!;
-draw_btn.addEventListener("click", profile(make_image));
+let fields: HTMLInputDict = {};
+astro_fields.concat(color_fields).forEach((id) => {
+    fields[id] = document.getElementById(id) as HTMLInputElement;
+});
 
-let calculated_grid: SkyCoord[][];
+let geo: Sun.GeoCoord = {
+    lat: +fields["lat"].value,
+    lon: +fields["lon"].value
+};
 
+let start_time = fields["start-time"].value + "Z";
+
+let color_params: Colors.Params = {
+    black: +fields["black"].value,
+    h_1: +fields["h_1"].value,
+    h_2: +fields["h_2"].value,
+    white: +fields["white"].value,
+    gap: +fields["gap"].value,
+    model: fields["model"].value.toLowerCase() == "okhsl" ? OkHSL.ID : HSL.ID,
+    hue_shift: +fields["hue"].value,
+    mirror_hue: fields["mirror_hue"].checked ? 1 : 0,
+}
+
+function set_onchange() {
+    astro_fields.forEach((field) => {
+        fields[field].addEventListener("change", update_astronomy);
+    });
+    color_fields.forEach((field) => {
+        fields[field].addEventListener("change", update_colors);
+    });
+}
+
+// init
+set_onchange();
+calculate_and_draw();
