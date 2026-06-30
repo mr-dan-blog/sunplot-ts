@@ -15,6 +15,11 @@ export const HSL: ColorSpace = {
     toRgb: hsl_to_rgb
 };
 
+export const OkHSV: ColorSpace = {
+    ID: 2,
+    toRgb: okhsv_to_rgb
+};
+
 // based on https://www.baeldung.com/cs/convert-color-hsl-rgb
 // then unnecessarily optimized
 function hsl_to_rgb(hsl: d.v3f) {
@@ -41,6 +46,14 @@ function hsl_to_rgb(hsl: d.v3f) {
 function okhsl_to_rgb(hsl: d.v3f) {
     'use gpu';
     const oklab = OK.okhsl_to_oklab(hsl);
+    const srgb = srgb_gamma(OK.oklab_to_linear_srgb(oklab));
+    const srgba = d.vec4f(srgb.r, srgb.g, srgb.b, 1);
+    return std.pack4x8unorm(srgba);
+}
+
+function okhsv_to_rgb(hsl: d.v3f) {
+    'use gpu';
+    const oklab = OK.okhsv_to_oklab(hsl);
     const srgb = srgb_gamma(OK.oklab_to_linear_srgb(oklab));
     const srgba = d.vec4f(srgb.r, srgb.g, srgb.b, 1);
     return std.pack4x8unorm(srgba);
@@ -291,6 +304,42 @@ namespace OK {
         }
 
         return d.vec3f(C_0, C_mid, C_max);
+    }
+
+    export function okhsv_to_oklab(hsv: d.v3f) {
+        'use gpu';
+        const h = hsv[0];
+        const s = hsv[1];
+        const v = hsv[2];
+
+        const a_ = std.cos(2 * Math.PI * h / 360);
+        const b_ = std.sin(2 * Math.PI * h / 360);
+
+        const cusp = find_cusp(a_, b_);
+        const S_max = cusp[1] / cusp[0]; // C/L
+        const T_max = cusp[1] / (1 - cusp[0]); // C/(1-L)
+        const S_0 = d.f32(0.5);
+        const k = 1 - S_0 / S_max;
+
+
+        // L, C when v==1:
+        const L_v = 1 - s * S_0 / (S_0 + T_max - T_max * k * s);
+        const C_v = s * T_max * S_0 / (S_0 + T_max - T_max * k * s);
+
+        let L = v * L_v;
+        let C = v * C_v;
+
+        const L_vt = toe_inv(L_v);
+        const C_vt = C_v * L_vt / L_v;
+
+        const L_new = toe_inv(L);
+        C = C * L_new / L;
+        L = L_new;
+
+        const rgb_scale = oklab_to_linear_srgb(d.vec3f(L_vt, a_ * C_vt, b_ * C_vt));
+        const scale_L = std.pow(std.max(rgb_scale.r, rgb_scale.g, rgb_scale.b), -1/3);
+
+        return d.vec3f(L * scale_L, C * scale_L * a_, C * scale_L * b_);
     }
 
     export function okhsl_to_oklab(hsl: d.v3f) {

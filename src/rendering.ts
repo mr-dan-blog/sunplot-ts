@@ -1,7 +1,7 @@
 
 import { d, type TgpuRoot } from "typegpu";
 import Sun from "./sun";
-import { OkHSL, HSL } from "./color_spaces";
+import { OkHSL, HSL, OkHSV } from "./color_spaces";
 
 namespace Render {
     export type Params = {
@@ -44,6 +44,8 @@ namespace Render {
         let rgba = d.u32(0);
         if (params.model === HSL.ID) {
             rgba = HSL.toRgb(d.vec3f(hue, 0.9, lightness))
+        } else if (params.model === OkHSV.ID) {
+            rgba = OkHSV.toRgb(d.vec3f(hue, 0.9, lightness))
         } else {
             rgba = OkHSL.toRgb(d.vec3f(hue, 0.9, lightness));
         }

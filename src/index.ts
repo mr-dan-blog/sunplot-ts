@@ -3,7 +3,7 @@ import { Temporal } from "temporal-polyfill";
 
 import Sun from "./sun";
 import Render from "./rendering";
-import { HSL, OkHSL } from "./color_spaces";
+import { HSL, OkHSL, OkHSV } from "./color_spaces";
 
 
 async function calculate_sun() {
@@ -52,13 +52,28 @@ function update_astronomy(render?: boolean) {
 }
 
 function update_colors(render?: boolean) {
+    let model: number;
+    switch (fields["model"].value.toLowerCase()) {
+        case "okhsl":
+            model = OkHSL.ID;
+            break;
+        case "okhsv":
+            model = OkHSV.ID;
+            break;
+        case "hsl":
+            model = HSL.ID;
+            break;
+        default:
+            model = 0;
+    };
+
     color_params = {
         black: +fields["black"].value,
         h_1: +fields["h_1"].value,
         h_2: +fields["h_2"].value,
         white: +fields["white"].value,
         gap: +fields["gap"].value,
-        model: fields["model"].value.toLowerCase() == "okhsl" ? OkHSL.ID : HSL.ID,
+        model: model,
         hue_shift: +fields["hue"].value,
         mirror_hue: fields["mirror_hue"].checked ? 1 : 0,
     }
