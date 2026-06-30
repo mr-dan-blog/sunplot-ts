@@ -40,11 +40,6 @@ function wrap(radians: number) {
     return std.mod(radians + TAU, TAU);
 }
 
-function reference(radians: number) {
-    'use gpu';
-    return std.mod(radians + Math.PI, TAU) - Math.PI;
-}
-
 function julian_date(date: Temporal.Instant) {
     const seconds = date.since(Julian_zero).seconds;
     return seconds / (60 * 60 * 24);
@@ -56,7 +51,7 @@ function altitude_azimuth(J_whole: number, J_frac: number, lon: number, sin_lat:
 
     const M = wrap(M_0 + M_1 * d.f32(J_whole) + M_1 * J_frac); // mean anomaly
     const nu = M + C_1 * std.sin(M) + C_2 * std.sin(2 * M) + C_3 * std.sin(3 * M); // true anomaly
-    const lambda = reference(nu + Pi_earth + Math.PI); // ecliptical longitude
+    const lambda = wrap(nu + Pi_earth + Math.PI); // ecliptical longitude
     const alpha = lambda + A_2 * std.sin(2 * lambda) + A_4 * std.sin(4 * lambda) + A_6 * std.sin(6 * lambda); // right ascension
     const s = std.sin(lambda);
     const delta = (D_1 * s) + (D_3 * s ** 3) + (D_5 * s ** 5); // declination
