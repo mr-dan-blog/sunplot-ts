@@ -10,7 +10,7 @@ namespace Render {
         h_2: number, // minimum height for light hours
         white: number, // threshold above which all colors are treated as white
         gap: number, // transition width between dark and light phases
-        model: number, // actually (0 | 1)
+        model: number, // actually (0 | 1 | 2)
         hue_shift: number,
         mirror_hue: number // actually boolean
     };
@@ -42,12 +42,12 @@ namespace Render {
         }
         
         let rgba = d.u32(0);
-        if (params.model === HSL.ID) {
+        if (params.model === OkHSL.ID) {
+            rgba = OkHSL.toRgb(d.vec3f(hue, 0.9, lightness))
+        } else if (params.model === HSL.ID) {
             rgba = HSL.toRgb(d.vec3f(hue, 0.9, lightness))
-        } else if (params.model === OkHSV.ID) {
-            rgba = OkHSV.toRgb(d.vec3f(hue, 0.9, lightness))
         } else {
-            rgba = OkHSL.toRgb(d.vec3f(hue, 0.9, lightness));
+            rgba = OkHSV.toRgb(d.vec3f(hue, 0.9, lightness));
         }
         return rgba;
     }
