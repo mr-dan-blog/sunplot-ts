@@ -73,8 +73,10 @@ function update_colors(field: string, render?: boolean) {
             break;
         case "day_min":
             color_params.day_min = +fields["day_min"].value;
+            fields["night_max"].max = (color_params.day_min).toString();
         case "night_max":
             const night_max_literal = +fields["night_max"].value;
+            // in case they get out of sync
             color_params.night_max = Math.min(night_max_literal, color_params.day_min);
             break;
         case "model":
