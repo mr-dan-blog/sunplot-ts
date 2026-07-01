@@ -60,16 +60,22 @@ function update_astronomy(field: string, render?: boolean) {
 
 function update_colors(field: string, render?: boolean) {
     switch (field) {
-        case "gap":
-            const offset = +fields["gap"].value / 2;
-            fields["black"].max = (0.5 - offset).toString();
-            fields["white"].min = (0.5 + offset).toString();
         case "black":
-        case "h_1":
-        case "h_2":
         case "white":
         case "hue_shift":
             color_params[field] = +fields[field].value;
+            break;
+        case "gap":
+            color_params.gap = +fields["gap"].value;
+            const offset = color_params.gap / 2;
+            fields["black"].max = (0.5 - offset).toString();
+            fields["white"].min = (0.5 + offset).toString();
+            break;
+        case "day_min":
+            color_params.day_min = +fields["day_min"].value;
+        case "night_max":
+            const night_max_literal = +fields["night_max"].value;
+            color_params.night_max = Math.min(night_max_literal, color_params.day_min);
             break;
         case "model":
             const key = fields["model"].value.toLowerCase();
@@ -102,7 +108,7 @@ interface HTMLInputDict {
 }
 
 const astro_fields = ["lat", "lon", "start_time", "utc"];
-const color_fields = ["black", "h_1", "h_2", "white", "gap", "model", "hue_shift", "mirror_hue"];
+const color_fields = ["black", "night_max", "day_min", "white", "gap", "model", "hue_shift", "mirror_hue"];
 
 let fields: HTMLInputDict = {};
 astro_fields.concat(color_fields).forEach((id) => {
@@ -128,8 +134,8 @@ let astro_params: Sun.Params = {
 update_astronomy("all", false);
 let color_params: Render.Params = {
     black: 0,
-    h_1: 0.4,
-    h_2: 0.6,
+    night_max: 0.4,
+    day_min: 0.6,
     white: 1,
     gap: 0.05,
     model: 0,

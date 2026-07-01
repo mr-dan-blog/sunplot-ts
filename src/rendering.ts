@@ -6,8 +6,8 @@ import { OkHSL, HSL, OkHSV } from "./color_models";
 namespace Render {
     export type Params = {
         black: number; // threshold below which all colors are treated as black
-        h_1: number, // maximum "height" for dark hours
-        h_2: number, // minimum height for light hours
+        night_max: number, // maximum "height" for dark hours
+        day_min: number, // minimum height for light hours
         white: number, // threshold above which all colors are treated as white
         gap: number, // transition width between dark and light phases
         model: number, // actually (0 | 1 | 2)
@@ -20,13 +20,13 @@ namespace Render {
 
         const x_1 = 0.5 - params.gap / 2;
         const x_2 = 0.5 + params.gap / 2;
-        const slope_0 = params.h_1 / (x_1 - params.black);
-        const slope_1 = (params.h_2 - params.h_1) / params.gap;
-        const slope_2 = (1 - params.h_2) / (params.white - x_2);
+        const slope_0 = params.night_max / (x_1 - params.black);
+        const slope_1 = (params.day_min - params.night_max) / params.gap;
+        const slope_2 = (1 - params.day_min) / (params.white - x_2);
 
         if (x < params.black) return 0;
         else if (x < x_1) return slope_0 * (x - params.black);
-        else if (x < x_2) return params.h_1 + slope_1 * (x - x_1);
+        else if (x < x_2) return params.night_max + slope_1 * (x - x_1);
         else if (x < params.white) return 1 + slope_2 * (x - params.white);
         else return 1;
     }
@@ -57,8 +57,8 @@ namespace Render {
         const params = GPU.createUniform(
             d.struct({
                 black: d.f32,
-                h_1: d.f32,
-                h_2: d.f32,
+                night_max: d.f32,
+                day_min: d.f32,
                 white: d.f32,
                 gap: d.f32,
                 model: d.u32,
@@ -67,8 +67,8 @@ namespace Render {
             }),
             {
                 black: d.f32(color_options.black),
-                h_1: d.f32(color_options.h_1),
-                h_2: d.f32(color_options.h_2),
+                night_max: d.f32(color_options.night_max),
+                day_min: d.f32(color_options.day_min),
                 white: d.f32(color_options.white),
                 gap: d.f32(color_options.gap),
                 model: d.u32(color_options.model),
