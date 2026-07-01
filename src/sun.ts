@@ -46,7 +46,7 @@ function julian_date(date: Temporal.Instant) {
 }
 
 
-function altitude_azimuth(J_whole: number, J_frac: number, lon: number, sin_lat: number, cos_lat: number): Sun.SkyCoord {
+function altitude_azimuth(J_whole: number, J_frac: number, lon_rad_inner: number, sin_lat: number, cos_lat: number): Sun.SkyCoord {
     'use gpu';
 
     const M = wrap(M_0 + M_1 * d.f32(J_whole) + M_1 * J_frac); // mean anomaly
@@ -55,7 +55,7 @@ function altitude_azimuth(J_whole: number, J_frac: number, lon: number, sin_lat:
     const alpha = lambda + A_2 * std.sin(2 * lambda) + A_4 * std.sin(4 * lambda) + A_6 * std.sin(6 * lambda); // right ascension
     const s = std.sin(lambda);
     const delta = (D_1 * s) + (D_3 * s ** 3) + (D_5 * s ** 5); // declination
-    const theta = wrap(theta_0 + theta_1_frac * d.f32(J_whole) + theta_1 * J_frac - lon); //siderial time
+    const theta = wrap(theta_0 + theta_1_frac * d.f32(J_whole) + theta_1 * J_frac - lon_rad_inner); //siderial time
     const H = theta - alpha;
 
     const A = std.atan2(std.sin(H), std.cos(H) * sin_lat - std.tan(delta) * cos_lat);
@@ -114,7 +114,7 @@ namespace Sun {
                 'use gpu';
                 const J_whole = J_0_whole + d.i32(day);
                 const J_frac = J_0_frac + step_size * d.f32(step);
-                const z = SkyCoordSchema(altitude_azimuth(J_whole, J_frac, lon, sin_lat, cos_lat));
+                const z = SkyCoordSchema(altitude_azimuth(J_whole, J_frac, d.f32(lon), d.f32(sin_lat), d.f32(cos_lat)));
                 output_grid.$[day][step] = SkyCoordSchema(z);
             }
         );

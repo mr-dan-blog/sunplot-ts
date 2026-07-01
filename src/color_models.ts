@@ -1,24 +1,35 @@
 import { d, std } from "typegpu";
 
-export type ColorSpace = {
+export type ColorModel = {
     ID: number,
     toRgb(hsl: d.v3f): number
 };
 
-export const OkHSL: ColorSpace = {
+export const OkHSL: ColorModel = {
     ID: 0,
     toRgb: okhsl_to_rgb
 };
 
-export const HSL: ColorSpace = {
+export const HSL: ColorModel = {
     ID: 1,
     toRgb: hsl_to_rgb
 };
 
-export const OkHSV: ColorSpace = {
+export const OkHSV: ColorModel = {
     ID: 2,
     toRgb: okhsv_to_rgb
 };
+
+
+interface ModelDict {
+    [key: string]: ColorModel
+}
+
+export const models: ModelDict = {
+    "okhsl": OkHSL,
+    "hsl": HSL,
+    "okhsv": OkHSV
+}
 
 // based on https://www.baeldung.com/cs/convert-color-hsl-rgb
 // then unnecessarily optimized

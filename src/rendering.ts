@@ -1,7 +1,7 @@
 
 import { d, type TgpuRoot } from "typegpu";
 import Sun from "./sun";
-import { OkHSL, HSL, OkHSV } from "./color_spaces";
+import { OkHSL, HSL, OkHSV } from "./color_models";
 
 namespace Render {
     export type Params = {
@@ -40,7 +40,7 @@ namespace Render {
         if (d.bool(params.mirror_hue)) {
             hue = 360 - hue;
         }
-        
+
         let rgba = d.u32(0);
         if (params.model === OkHSL.ID) {
             rgba = OkHSL.toRgb(d.vec3f(hue, 0.9, lightness))
