@@ -60,11 +60,14 @@ function update_astronomy(field: string, render?: boolean) {
 
 function update_colors(field: string, render?: boolean) {
     switch (field) {
+        case "gap":
+            const offset = +fields["gap"].value / 2;
+            fields["black"].max = (0.5 - offset).toString();
+            fields["white"].min = (0.5 + offset).toString();
         case "black":
         case "h_1":
         case "h_2":
         case "white":
-        case "gap":
         case "hue_shift":
             color_params[field] = +fields[field].value;
             break;
