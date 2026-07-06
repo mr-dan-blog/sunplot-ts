@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme {
+    --color-err: darkred;
+    --color-card: var(--color-mist-100);
+    --color-subcard: var(--color-mist-200);
+}
+
+body {
+    @apply bg-mist-50;
+
+    h1 {
+        @apply font-light text-3xl;
+    }
+
+    canvas {
+        zoom: 150%;
+    }
+
+    .card {
+        @apply bg-card rounded-md w-full;
+
+        legend {
+            @apply text-lg px-2 bg-card rounded-sm;
+        }
+    }
+
+    fieldset {
+        @apply p-2;
+
+        .row {
+            @apply flex gap-4;
+        }
+
+        input, select{
+            @apply border border-mist-700 bg-mist-50 px-1 rounded-xs;
+
+            &[type="number"]{
+                @apply max-w-16;
+            }
+
+            &:invalid {
+                @apply bg-red-100 border-red-700;
+            }
+        }
+    }
+
+    a {
+        @apply text-blue
+    }
+
+    details summary {
+        @apply italic;
+    }
+}

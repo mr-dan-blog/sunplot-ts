@@ -1,1 +1,290 @@
-<!doctype html><html><head><meta charset="utf-8"/><title>Sunplot</title><script defer="defer" src="main.js"></script></head><body><h1>Sunplot</h1><canvas id="canvas" height="288" width="365"></canvas><fieldset><legend>Astronomy</legend>Coordinates<br><input name="latitude" id="lat" value="42.4" pattern="-?\d?\d(\.\d+)?" inputmode="decimal" required style="width:74px"/> <label for="lat">°N</label> <input name="longitude" id="lon" value="71" pattern="-?1?\d?\d(\.\d+)?" inputmode="decimal" required style="width:74px"/> <label for="lon">°W</label><br><label for="start-time">Start time:</label> <input type="datetime-local" id="start-time" value="2026-01-01T00:00" required> (UTC)<br><input name="utc" id="utc" type="checkbox"> <label for="utc">Use UTC (off: local solar time)</label></fieldset><fieldset><legend>Color</legend><label for="model">Color model:</label> <select name="model" id="model"><option>Okhsl</option><option>Okhsv</option><option>HSL</option></select><br><label for="black">Black floor:</label> <input name="black" id="black" type="number" value="0.0" min="0.0" max="0.5" step="0.01" inputmode="decimal" required/><br><label for="h_1">Maximum nighttime brightness:</label> <input name="h_1" id="h_1" type="range" value="0.40" min="0.00" max="1.00" step="0.05" inputmode="decimal" required/><br><label for="h_2">Minimum daytime brightness:</label> <input name="h_2" id="h_2" type="range" value="0.60" min="0.00" max="1.00" step="0.05" inputmode="decimal" required/><br><label for="gap">Day-night transition width:</label> <input name="gap" id="gap" type="number" value="0.05" min="0.00" max="1.00" step="0.01" inputmode="decimal" required/><br><label for="white">White ceiling:</label> <input name="white" id="white" type="number" value="0.95" min="0.5" max="1.00" step="0.01" inputmode="decimal" required/><br><label for="hue">Hue shift:</label> <input name="hue" id="hue" type="number" value="120" min="0" max="360" step="15" inputmode="numeric" required/> <input name="mirror_hue" id="mirror_hue" type="checkbox"> <label for="mirror_hue">Mirror</label><br></fieldset></body></html>
+<!DOCTYPE html>
+<html>
+
+<head>
+       <meta charset="utf-8"
+              name="viewport"
+              content="width=device-width, initial-scale=1.0" />
+       <title>Sunplot</title>
+<script defer src="main.js"></script></head>
+
+<body class="flex justify-center">
+       <div class="bg-mist-200 w-fit min-h-screen">
+              <div class="p-8 flex flex-col items-center gap-6 pt-6">
+                     <div class="flex self-start w-full items-center">
+                            <h1 class="flex-1">Sunplot</h1>
+                            <p class="flex-1 text-right inline align-baseline">
+                                   Now with <code>Infinity %</code> more GPU!
+                            </p>
+                     </div>
+                     <canvas id="output_canvas"
+                            height="288"
+                            width="365"></canvas>
+                     <fieldset class="flex flex-col gap-4 card">
+                            <legend>Astronomy</legend>
+                            <div class="flex gap-4 w-fit">
+                                   <p class="flex-none">Coordinates:</p>
+                                   <div class="flex-1 flex gap-1">
+                                          <input name="latitude"
+                                                 id="lat"
+                                                 type="text"
+                                                 value="42.4"
+                                                 pattern="-?\d?\d(\.\d+)?"
+                                                 inputmode="decimal"
+                                                 required
+                                                 class="max-w-20" />
+                                          <label for="lat">
+                                                 °N
+                                          </label>
+                                   </div>
+                                   <div class="flex-1 flex gap-1">
+                                          <input name="longitude"
+                                                 id="lon"
+                                                 type="text"
+                                                 value="71"
+                                                 pattern="-?1?\d?\d(\.\d+)?"
+                                                 inputmode="decimal"
+                                                 required
+                                                 class="max-w-20" />
+                                          <label for="lon">
+                                                 °W
+                                          </label>
+                                   </div>
+                            </div>
+                            <div class="flex gap-4">
+                                   Start time:
+                                   <input type="datetime-local"
+                                          id="start_time"
+                                          value="2026-01-01T00:00"
+                                          required>
+                                   <div class="flex-none flex gap-1">
+                                          <input name="utc"
+                                                 id="utc"
+                                                 type="checkbox">
+                                          <label for="utc">UTC</label>
+                                   </div>
+                            </div>
+                     </fieldset>
+                     <fieldset class="card">
+                            <legend>Color</legend>
+                            <div class="flex flex-col gap-4 justify-start">
+                                   <div class="row">
+                                          Color model:
+                                          <select name="model"
+                                                 id="model">
+                                                 <option>Okhsl</option>
+                                                 <option>Okhsv</option>
+                                                 <option>HSL</option>
+                                          </select>
+                                   </div>
+
+                                   <span>
+                                          <input name="mirror_hue"
+                                                 id="mirror_hue"
+                                                 type="checkbox">
+                                          Mirror hues
+                                   </span>
+
+                                   <div class="row">
+                                          Shift hues by
+                                          <span>
+                                                 <input name="hue_shift"
+                                                        id="hue_shift"
+                                                        type="number"
+                                                        value="120"
+                                                        min="0"
+                                                        max="360"
+                                                        step="15"
+                                                        inputmode="numeric"
+                                                        required />
+                                                 °
+                                          </span>
+                                   </div>
+                            </div>
+                     </fieldset>
+                     <fieldset class="card flex gap-6">
+                            <legend>Lightness</legend>
+
+                            <div class="flex flex-col gap-4">
+                                   <div class="row">
+                                          <input name="white"
+                                                 id="white"
+                                                 type="number"
+                                                 value="0.95"
+                                                 min="0.5"
+                                                 max="1.00"
+                                                 step="0.01"
+                                                 inputmode="decimal"
+                                                 required />
+                                          White ceiling
+                                   </div>
+
+                                   <div class="row">
+                                          <input name="day_min"
+                                                 id="day_min"
+                                                 type="number"
+                                                 value="0.60"
+                                                 min="0.00"
+                                                 max="1.00"
+                                                 step="0.05"
+                                                 inputmode="decimal"
+                                                 required />
+                                          Min. daytime brightness
+                                   </div>
+
+                                   <div class="row">
+                                          <input name="gap"
+                                                 id="gap"
+                                                 type="number"
+                                                 value="0.05"
+                                                 min="0.00"
+                                                 max="1.00"
+                                                 step="0.01"
+                                                 inputmode="decimal"
+                                                 required />
+                                          Day-night transition width
+                                   </div>
+
+                                   <div class="row">
+                                          <input name="night_max"
+                                                 id="night_max"
+                                                 type="number"
+                                                 value="0.40"
+                                                 min="0.00"
+                                                 max="1.00"
+                                                 step="0.05"
+                                                 inputmode="decimal"
+                                                 required />
+                                          Max. nighttime brightness
+                                   </div>
+
+                                   <div class="row">
+                                          <input name="black"
+                                                 id="black"
+                                                 type="number"
+                                                 value="0.0"
+                                                 min="0.0"
+                                                 max="0.5"
+                                                 step="0.01"
+                                                 inputmode="decimal"
+                                                 required />
+                                          Black floor
+                                   </div>
+                            </div>
+
+                            <svg id="svgdoc" style="overflow: visible" class="pb-8 pl-10 mt-[-4px] mr-2 grow"
+                                   width="220" height="212"
+                                   version="1.1" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+                                   <path d="m0 0v180h180" fill="none" stop-color="#000000" stroke="#666"
+                                          style="font-variation-settings:normal" />
+                                   <g fill="#666666" font-family="'sans-serif'" letter-spacing="0px"
+                                          stroke-linecap="round" stroke-linejoin="round"><text x="-39.022991" y="-5"
+                                                 font-size="16px" stroke-dasharray="2.00001, 2.00001"
+                                                 vector-effect="non-scaling-stroke"
+                                                 style="line-height:1.1" xml:space="preserve">
+                                                 <tspan x="21.577005" y="210" fill="#666666" font-family="'ans-serif'"
+                                                        font-size="16px" letter-spacing="0px">Azimuth (degrees)</tspan>
+                                          </text><text transform="rotate(-90)" x="5" y="-39.022991" font-size="16px"
+                                                 stroke-dasharray="2.00001, 2.00001" vector-effect="non-scaling-stroke"
+                                                 style="line-height:1.1" xml:space="preserve">
+                                                 <tspan x="-139.65598" y="-26.863016" fill="#666666"
+                                                        font-family="'sans-serif'" font-size="16px"
+                                                        letter-spacing="0px">Lightness (%)</tspan>
+                                          </text>
+                                          <g font-size="10.667px"><text x="-39.022991" y="-5" style="line-height:1.1"
+                                                        xml:space="preserve">
+                                                        <tspan x="-7.8186512" y="193.00037" fill="#666666"
+                                                               font-size="10.667px">-90</tspan>
+                                                 </text><text x="-39.022991" y="-5" style="line-height:1.1"
+                                                        xml:space="preserve">
+                                                        <tspan x="86.949348" y="193.00037" fill="#666666"
+                                                               font-size="10.667px">0</tspan>
+                                                 </text><text x="-39.022991" y="-5" style="line-height:1.1"
+                                                        xml:space="preserve">
+                                                        <tspan x="173.89868" y="193.00037" fill="#666666"
+                                                               font-size="10.667px">90</tspan>
+                                                 </text></g>
+                                   </g>
+                                   <path d="m90 0v180" fill="none" stop-color="#000000" stroke="#666"
+                                          stroke-dasharray="4, 2" style="font-variation-settings:normal" />
+                                   <g fill="#666666" font-family="'sans-serif'" font-size="10.667px"
+                                          letter-spacing="0px"
+                                          stroke-linecap="round" stroke-linejoin="round"><text x="-39.022991" y="-5"
+                                                 style="line-height:1.1" xml:space="preserve">
+                                                 <tspan x="-11.578657" y="184" fill="#666666" font-size="10.667px">0
+                                                 </tspan>
+                                          </text><text x="-39.022991" y="-5" style="line-height:1.1"
+                                                 xml:space="preserve">
+                                                 <tspan x="-17.679989" y="94.000793" fill="#666666"
+                                                        font-size="10.667px">50</tspan>
+                                          </text><text x="-39.022991" y="-5" style="line-height:1.1"
+                                                 xml:space="preserve">
+                                                 <tspan x="-23.781311" y="4.0012817" fill="#666666"
+                                                        font-size="10.667px">100</tspan>
+                                          </text></g>
+                                   <path id="connector" d="M 0 180 H 0 L 85.5 108 L 94.5 72 L 171 0 H 180" fill="none"
+                                          stop-color="#000000" stroke="#000"
+                                          style="font-variation-settings:normal" />
+                                   <g>
+                                          <circle id="circle0" cx="-1.8196e-6" cy="180" r="5" />
+                                          <circle id="circle1" cx="0" cy="180" r="5" />
+                                          <circle id="circle2" cx="85.5" cy="108" r="5" />
+                                          <circle id="circle3" cx="94.5" cy="72" r="5" />
+                                          <circle id="circle4" cx="171" r="5" />
+                                          <circle id="circle5" cx="180" r="5" />
+                                   </g>
+                            </svg>
+                     </fieldset>
+                     <hr class="h-px w-full m-8">
+                     <div class="w-full flex flex-col gap-4">
+                            <span class="text-lg">About</span>
+                            <details class="max-w-[540px]">
+                                   <summary>What is this?</summary>
+                                   The image represents the position of the sun at every moment of the year
+                                   at your chosen coordinates. Each day of the year is a 1px-wide column of the image,
+                                   with 00:00 at the top and 23:59 at the bottom. Columns progress from left to right.
+                                   <br>
+                                   The color of a pixel describes where the sun is in the sky. Lightness represents the
+                                   sun's <i>azimuth</i>: dark colors mean the
+                                   sun is low, even below the horizon, and lighter colors mean the sun is high overhead.
+                                   The hue maps the sun's compass direction onto a color wheel.
+                            </details>
+                            <details class="max-w-[540px]">
+                                   <summary>How does it work?</summary>
+                                   The positions of the sun are computed in
+                                   <a href="https://en.wikipedia.org/wiki/Horizontal_coordinate_system">horizontal
+                                          coordinates</a>.
+                                   This happens in parallel on the GPU using algorithms from
+                                   <a href="https://aa.quae.nl/en/reken/zonpositie.html">Astronomy Answers</a>. For the
+                                   sake of speed, we only sample every 5 minutes, which gives plenty of resolution.
+                                   <br><br>
+                                   The sun's coordinates are then transformed into colors, also on the GPU. The raw
+                                   colors
+                                   don't tend to convey anything very clearly, so the "lightness" paramaters are used to
+                                   tune colors for better contrast.
+                            </details>
+                            <details class="max-w-[540px]">
+                                   <summary>Who made it?</summary>
+                                   <a href="https://danonymous.bearblog.dev/">Danonymous</a>, mostly. This is a
+                                   much-optimized
+                                   (~1000x speedup) rewrite of a project that they and <a
+                                          href="https://github.com/doubleaykay">DoubleAyKay</a>
+                                   created before they got good. Concept is jointl, while this implementation is solely
+                                   Dan's work.
+                                   <br><br>
+                                   None of the code was written or assisted by LLM. Dan did use one to help find
+                                   potential libraries, but writing the code is the fun part. Also, only one of those
+                                   libraries (<a href="https://docs.swmansion.com/TypeGPU/">TypeGPU</a>) actually made
+                                   it into the finished project; the rest is all hand-spun as a triumph of Dan-kind.
+                                   <br><br>
+                                   Shoutouts to <a href="https://docs.swmansion.com/TypeGPU/">TypeGPU</a>, which kept me
+                                   from having to learn a shader language, and to <a
+                                          href="https://bottosson.github.io/posts/colorpicker/">Bjorn Ottoson</a>, who
+                                   created the Okhsl color space along with open-source color conversion code.
+                            </details>
+                     </div>
+              </div>
+       </div>
+</body>
+
+</html>

@@ -10,11 +10,18 @@
     "watch": "webpack --watch"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.2",
     "browserslist": "latest",
+    "css-loader": "^7.1.4",
     "eslint-plugin-typegpu": "^0.11.1",
     "html-loader": "^5.1.0",
     "html-webpack-plugin": "^5.6.7",
     "mini-css-extract-plugin": "^2.10.2",
+    "postcss": "^8.5.16",
+    "postcss-loader": "^8.2.1",
+    "postcss-preset-env": "^11.3.2",
+    "style-loader": "^4.0.0",
+    "tailwindcss": "^4.3.2",
     "ts-loader": "^9.6.0",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
@@ -28,5 +35,6 @@
     "@webgpu/types": "^0.1.70",
     "temporal-polyfill": "^0.3.2",
     "typegpu": "^0.11.8"
-  }
+  },
+  "packageManager": "pnpm@11.10.0+sha512.0b7f8b98060031904c017e3a41eb187a16d40eeb829b95c4f8cb03681761fc4ab53dd219115b9b447f4dce1a05a214764461e7d3703392a9f32f9511ce8c86c8"
 }

@@ -81,8 +81,7 @@ function srgb_gamma(linear: d.v3f) {
     );
 }
 
-// Derived from https://github.com/Remiscan/colori/blob/main/src/ts/ext/okhsl-okhsv-conversion.ts
-// itself derived from https://github.com/bottosson/bottosson.github.io/blob/master/misc/colorpicker/colorconversion.js
+// Derived from https://github.com/bottosson/bottosson.github.io/blob/master/misc/colorpicker/colorconversion.js
 namespace OK {
     export function oklab_to_linear_srgb(Lab: d.v3f) {
         'use gpu';

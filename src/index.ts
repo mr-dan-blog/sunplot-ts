@@ -3,6 +3,8 @@ import { tgpu } from "typegpu";
 import Sun from "./sun";
 import Render from "./rendering";
 import { models } from "./color_models";
+import { refresh_brightness } from "./brightness";
+import "./styles.css";
 
 
 async function calculate_sun() {
@@ -11,6 +13,11 @@ async function calculate_sun() {
 
 async function draw() {
     // const start = performance.now();
+
+    if (!all_valid()) {
+        console.debug("invalid parameter")
+        return;
+    }
 
     const pixels = await Render.pixels(calculated_grid, color_params, GPU);
     const packed = new Uint32Array(pixels.flat().flat());
@@ -67,7 +74,7 @@ function update_colors(field: string, render?: boolean) {
             break;
         case "gap":
             color_params.gap = +fields["gap"].value;
-            const offset = color_params.gap / 2;
+            const offset = +(color_params.gap / 2).toFixed(2);
             fields["black"].max = (0.5 - offset).toString();
             fields["white"].min = (0.5 + offset).toString();
             break;
@@ -91,14 +98,21 @@ function update_colors(field: string, render?: boolean) {
             break;
     }
 
+    refresh_brightness(color_params);
     if (render) {
         draw();
     }
 }
 
+function all_valid() {
+    return astro_fields.concat(color_fields).map(id => {
+        const e = document.getElementById(id) as HTMLInputElement;
+        return e.checkValidity();
+    }).every(b => b);
+}
 
 const GPU = await tgpu.init();
-const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+const canvas = document.getElementById("output_canvas") as HTMLCanvasElement;
 const ctx = canvas.getContext('2d', { alpha: false })!;
 
 
@@ -119,10 +133,10 @@ astro_fields.concat(color_fields).forEach((id) => {
 
 function set_onchange() {
     astro_fields.forEach((field) => {
-        fields[field].addEventListener("change", () => { update_astronomy(field, true) });
+        fields[field].addEventListener("input", () => { update_astronomy(field, true) }, { passive: true });
     });
     color_fields.forEach((field) => {
-        fields[field].addEventListener("change", () => { update_colors(field, true) });
+        fields[field].addEventListener("input", () => { update_colors(field, true) }, { passive: true });
     });
 }
 

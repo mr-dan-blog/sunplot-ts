@@ -27,9 +27,7 @@ const config: Configuration = {
         new HtmlWebpackPlugin({
             template: "index.html",
         }),
-        typegpu({
-            // earlyPruning: false
-        }),
+        typegpu({}),
         // Add your plugins here
         // Learn more about plugins from https://webpack.js.org/configuration/plugins/
     ],
@@ -42,7 +40,7 @@ const config: Configuration = {
             },
             {
                 test: /\.css$/i,
-                use: [stylesHandler, "css-loader"],
+                use: [stylesHandler, "css-loader", "postcss-loader"],
             },
             {
                 test: /\.(eot|svg|ttf|woff|woff2|png|jpg|gif)$/i,
@@ -59,7 +57,7 @@ const config: Configuration = {
         ],
     },
     resolve: {
-        extensions: [".tsx", ".ts", ".jsx", ".js", "..."],
+        extensions: [".tsx", ".ts", ".jsx", ".js", ".css", "..."],
     },
 };
 
