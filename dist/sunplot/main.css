@@ -1,5 +1,10 @@
 @import "/stylesheet/main.css";
 
+:root {
+  --err-strong: color-mix(in srgb, red 10%, var(--text));
+  --err-weak: color-mix(in srgb, red 10%, var(--bg));
+}
+
 input,
 select {
     font-family: var(--font-code);
@@ -14,8 +19,8 @@ select {
     }
 
     &:invalid {
-        border-color: darkred;
-        background-color: rgb(255, 240, 240);
+        border-color: var(--err-strong);
+        background-color: var(--err-weak);
     }
 }
 
