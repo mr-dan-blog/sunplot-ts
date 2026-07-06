@@ -16,7 +16,6 @@ const circle_day_min = svgdoc.getElementById("circle3") as SVGCircleElement;
 const circle_white = svgdoc.getElementById("circle4") as SVGCircleElement;
 
 const connector = svgdoc.getElementById("connector") as SVGPathElement;
-console.log(connector);
 
 export function refresh_brightness(params: Render.Params) {
     const black = remap_x(params.black);
