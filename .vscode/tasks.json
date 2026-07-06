@@ -17,7 +17,7 @@
 			"type": "shell",
 			"command": "python3 -m http.server 8080",
 			"options": {
-				"cwd": "./dist"
+				"cwd": "./dist/sunplot"
 			},
 			"presentation": {
 				"panel": "dedicated"
