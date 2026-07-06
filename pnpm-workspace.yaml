@@ -1,6 +1,0 @@
-allowBuilds:
-  '@parcel/watcher': true
-  core-js: set this to true or false
-  gl: true
-  webgpu: true
-blockExoticSubdeps: false

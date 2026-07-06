@@ -4,7 +4,7 @@ import Sun from "./sun";
 import Render from "./rendering";
 import { models } from "./color_models";
 import { refresh_brightness } from "./brightness";
-import "./styles.css";
+import "./sunplot.css";
 
 
 async function calculate_sun() {
