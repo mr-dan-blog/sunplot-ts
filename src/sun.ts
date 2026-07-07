@@ -8,8 +8,6 @@ const TAU = Math.PI * 2;
 // Not true Julian 0, but the formulae use it as such
 // Using true Julian 0 results in loss of floating point precision
 const Julian_zero = Temporal.Instant.from("2000-01-01T12:00Z");
-// const MILLISECONDS_PER_DAY = 1000*60*60*24;
-// const Julian_zero = Date.parse("2000-01-01T12:00Z") / MILLISECONDS_PER_DAY;
 
 const M_0 = std.radians(357.5291); // mean anomaly on January 1, 2000
 const M_1 = std.radians(0.98560028); // derivative of mean anomaly
@@ -46,9 +44,6 @@ function julian_date(date: Temporal.Instant) {
     const seconds = date.since(Julian_zero).seconds;
     return seconds / (60 * 60 * 24);
 }
-// function julian_date(date: number) {
-//     return date-Julian_zero;
-// }
 
 
 function altitude_azimuth(J_whole: number, J_frac: number, lon_rad_inner: number, sin_lat: number, cos_lat: number): Sun.SkyCoord {
@@ -97,12 +92,9 @@ namespace Sun {
 
     export async function grid(params: Params, GPU: TgpuRoot) {
         let start_time = Temporal.Instant.from(params.start_time + "Z");
-        // let start_time = Date.parse(params.start_time + "Z") / MILLISECONDS_PER_DAY;
         if (!params.utc) {
             const offset = Math.trunc(params.geo.lon / 360 * 24 * 60); // number of minutes to offset
             start_time = start_time.add(Temporal.Duration.from("PT" + offset + "M"));
-            // const offset = params.geo.lon / 360; // fractional number of days to offset
-            // start_time += offset;
         }
 
         const J_0 = julian_date(start_time);
