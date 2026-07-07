@@ -8,6 +8,9 @@
 				"kind": "build",
 				"isDefault": true
 			},
+			"presentation": {
+				"panel": "dedicated"
+			},
 			"problemMatcher": [],
 			"label": "npm: build",
 			"detail": "webpack --mode=production --config-node-env=production -c ./webpack.config.ts"
