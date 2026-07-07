@@ -16,7 +16,10 @@ const stylesHandler = isProduction ? MiniCssExtractPlugin.loader : "style-loader
 
 /** @type {import("webpack").Configuration} */
 const config: Configuration = {
-    entry: "./src/index.ts",
+    entry: {
+        main: {import: "./src/index.ts", dependOn: "sun"},
+        "sun": ["./src/sun.ts"],
+    },
     output: {
         path: path.resolve(__dirname, "dist/sunplot"),
     },
