@@ -1,8 +1,8 @@
 @import "/stylesheet/main.css";
 
 :root {
-  --err-strong: color-mix(in srgb, red 50%, var(--text));
-  --err-weak: color-mix(in srgb, red 10%, var(--bg));
+    --err-strong: color-mix(in srgb, red 50%, var(--text));
+    --err-weak: color-mix(in srgb, red 10%, var(--bg));
 }
 
 input,
@@ -24,10 +24,19 @@ select {
     }
 }
 
+.canvas-frame {
+    justify-content: center;
+    position: sticky;
+    top: 10px;
+    max-width: 95%;
+    background-color: var(--bg);
+    justify-self: center;
+    box-shadow: 0 0 0.25em var(--muted);
+}
+
 canvas {
-    align-self: center;
     flex-grow: 1;
-    margin: 0 2rem;
+    flex-shrink: 1;
 }
 
 .card {
@@ -49,6 +58,7 @@ canvas {
 
 .flex-row {
     display: flex;
+    width: 100%;
     gap: 1rem;
 }
 
