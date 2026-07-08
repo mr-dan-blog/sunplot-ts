@@ -10,7 +10,6 @@ import "./sunplot.css";
 async function calculate_sun() {
     if (GPU != null) {
         calculated_grid = await Sun.grid(astro_params, GPU);
-        // calculated_grid_cpu = await calculated_grid.read(); // for testing
     } else {
         calculated_grid_cpu = Sun.grid_cpu(astro_params);
     }
