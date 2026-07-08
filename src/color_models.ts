@@ -31,6 +31,16 @@ export const models: ModelDict = {
     "okhsv": OkHSV
 }
 
+function clamp_pack(rgb: d.v3f) {
+    const srgba = d.vec4f(
+        std.clamp(rgb.r, 0, 1),
+        std.clamp(rgb.g, 0, 1),
+        std.clamp(rgb.b, 0, 1),
+        1
+    );
+    return std.pack4x8unorm(srgba);
+}
+
 // based on https://www.baeldung.com/cs/convert-color-hsl-rgb
 // then unnecessarily optimized
 function hsl_to_rgb(hsl: d.v3f) {
@@ -47,27 +57,25 @@ function hsl_to_rgb(hsl: d.v3f) {
 
     const band = std.ceil(h_prime) % 6;
 
-    let rgba = d.vec4f(m, m, m, 1)
-    rgba[band / 2] += C;
-    rgba[(5 - band) % 3] += X;
+    let srgb = d.vec3f(m, m, m);
+    srgb[band / 2] += C;
+    srgb[(5 - band) % 3] += X;
 
-    return std.pack4x8unorm(rgba);
+    return clamp_pack(srgb);
 }
 
 function okhsl_to_rgb(hsl: d.v3f) {
     'use gpu';
     const oklab = OK.okhsl_to_oklab(hsl);
     const srgb = srgb_gamma(OK.oklab_to_linear_srgb(oklab));
-    const srgba = d.vec4f(srgb.r, srgb.g, srgb.b, 1);
-    return std.pack4x8unorm(srgba);
+    return clamp_pack(srgb);
 }
 
 function okhsv_to_rgb(hsl: d.v3f) {
     'use gpu';
     const oklab = OK.okhsv_to_oklab(hsl);
     const srgb = srgb_gamma(OK.oklab_to_linear_srgb(oklab));
-    const srgba = d.vec4f(srgb.r, srgb.g, srgb.b, 1);
-    return std.pack4x8unorm(srgba);
+    return clamp_pack(srgb);
 
 }
 
