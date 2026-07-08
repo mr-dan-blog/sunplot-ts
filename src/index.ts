@@ -84,12 +84,12 @@ function update_colors(field: string, render?: boolean) {
         case "gap":
             color_params.gap = +fields["gap"].value;
             const offset = +(color_params.gap / 2).toFixed(2);
-            fields["black"].max = (0.5 - offset).toString();
-            fields["white"].min = (0.5 + offset).toString();
+            fields["black"].max = (0.5 - offset).toFixed(2);
+            fields["white"].min = (0.5 + offset).toFixed(2);
             break;
         case "day_min":
             color_params.day_min = +fields["day_min"].value;
-            fields["night_max"].max = (color_params.day_min).toString();
+            fields["night_max"].max = (color_params.day_min).toFixed(2);
         case "night_max":
             const night_max_literal = +fields["night_max"].value;
             // in case they get out of sync
