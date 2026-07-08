@@ -79,9 +79,9 @@
                             Color model:
                             <select name="model"
                                    id="model">
+                                   <option>HSL</option>
                                    <option>Okhsl</option>
                                    <option>Okhsv</option>
-                                   <option>HSL</option>
                             </select>
                      </div>
 
@@ -183,33 +183,25 @@
                                    <path d="m0 0v180h180" fill="none" stroke="var(--muted)" />
                                    <path d="m90 0v180" fill="none" stroke="var(--muted)" stroke-dasharray="4, 2" />
                                    <g>
-                                          <text x="21.5" y="210" fill="var(--muted)" font-family="sans-serif"
-                                                 font-size="16px">Azimuth (degrees)</text>
-                                          <text x="-139.65598" y="-26.863016" fill="var(--muted)"
-                                                 font-family="sans-serif" font-size="16px"
+                                          <text x="-139.65598" y="-26.863016" class="axis"
                                                  transform="rotate(-90)">Lightness (%)</text>
-                                          <text x="-11.578657" y="184" fill="var(--muted)" font-family="sans-serif"
-                                                 font-size="10.667px">0</text>
-                                          <text x="-17.679989" y="94" fill="var(--muted)" font-family="sans-serif"
-                                                 font-size="10.667px">50</text>
-                                          <text x="-23.781311" y="4" fill="var(--muted)" font-family="sans-serif"
-                                                 font-size="10.667px">100</text>
-                                          <text x="-7.8186512" y="193" fill="var(--muted)" font-family="sans-serif"
-                                                 font-size="10.667px">-90</text>
-                                          <text x="86.949348" y="193" fill="var(--muted)" font-family="sans-serif"
-                                                 font-size="10.667px">0</text>
-                                          <text x="173.89868" y="193" fill="var(--muted)" font-family="sans-serif"
-                                                 font-size="10.667px">90</text>
+                                          <text x="-11.578657" y="184">0</text>
+                                          <text x="-17.679989" y="94">50</text>
+                                          <text x="-23.781311" y="4">100</text>
+
+                                          <text x="21.5" y="210" class="axis">Azimuth (degrees)</text>
+                                          <text x="-7.8186512" y="193">-90</text>
+                                          <text x="86.949348" y="193">0</text>
+                                          <text x="173.89868" y="193">90</text>
                                    </g>
-                                   <path id="connector" fill="none" stroke="var(--text)"
-                                          style="d: path(&quot;M 0 180 H 0 L 85.5 108 L 94.5 72 L 171 0 H 180&quot;);" />
+                                   <path id="connector" d="" />
                                    <g>
-                                          <circle id="circle0" cx="0" cy="180" r="5" fill="var(--text)" />
-                                          <circle id="circle1" cy="180" r="5" fill="var(--text)" />
-                                          <circle id="circle2" r="5" fill="var(--text)" />
-                                          <circle id="circle3" r="5" fill="var(--text)" />
-                                          <circle id="circle4" cy="0" r="5" fill="var(--text)" />
-                                          <circle id="circle5" cx="180" cy="0" r="5" fill="var(--text)" />
+                                          <circle id="circle0" cx="0" cy="180" />
+                                          <circle id="circle1" cy="180" />
+                                          <circle id="circle2" />
+                                          <circle id="circle3" />
+                                          <circle id="circle4" cy="0" />
+                                          <circle id="circle5" cx="180" cy="0" />
                                    </g>
                             </svg>
                      </div>
