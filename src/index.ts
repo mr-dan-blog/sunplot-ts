@@ -122,7 +122,8 @@ function all_valid() {
 
 let GPU: TgpuRoot | null = null;
 try {
-    GPU = await tgpu.init()
+    GPU = await tgpu.init();
+    document.getElementById("percentage_gag")!.textContent = "Infinity";
 } catch (error) {
     console.log("WebGPU not available. Falling back to CPU implementation. Expect slow rendering.");
 }
