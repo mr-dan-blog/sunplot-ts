@@ -1,4 +1,4 @@
-import { tgpu } from "typegpu";
+import { tgpu, type TgpuRoot } from "typegpu";
 
 import Sun from "./sun";
 import Render from "./rendering";
@@ -8,7 +8,12 @@ import "./sunplot.css";
 
 
 async function calculate_sun() {
-    calculated_grid = await Sun.grid(astro_params, GPU);
+    if (GPU != null) {
+        calculated_grid = await Sun.grid(astro_params, GPU);
+        // calculated_grid_cpu = await calculated_grid.read(); // for testing
+    } else {
+        calculated_grid_cpu = Sun.grid_cpu(astro_params);
+    }
 }
 
 async function draw() {
@@ -19,8 +24,13 @@ async function draw() {
         return;
     }
 
-    const pixels = await Render.pixels(calculated_grid, color_params, GPU);
-    const packed = new Uint32Array(pixels.flat().flat());
+    let packed: Uint32Array<ArrayBuffer>;
+    if (GPU != null) {
+        let pixels = await Render.pixels(calculated_grid, color_params, GPU);
+        packed = new Uint32Array(pixels.flat().flat());
+    } else {
+       packed = Render.pixels_cpu(calculated_grid_cpu, color_params);
+    }
     const unpacked = new Uint8ClampedArray(packed.buffer);
     const data = new ImageData(unpacked, 365);
 
@@ -111,13 +121,19 @@ function all_valid() {
     }).every(b => b);
 }
 
-const GPU = await tgpu.init();
+let GPU: TgpuRoot | null = null;
+try {
+    GPU = await tgpu.init()
+} catch (error) {
+    console.log("WebGPU not available. Falling back to CPU implementation. Expect slow rendering.");
+}
 const canvas = document.getElementById("output_canvas") as HTMLCanvasElement;
 const ctx = canvas.getContext('2d', { alpha: false })!;
 
 
 // global variables
 let calculated_grid: Sun.SkyGridBuffer;
+let calculated_grid_cpu: Sun.SkyCoord[][];
 
 interface HTMLInputDict {
     [key: string]: HTMLInputElement

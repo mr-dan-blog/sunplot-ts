@@ -45,7 +45,6 @@ function julian_date(date: Temporal.Instant) {
     return seconds / (60 * 60 * 24);
 }
 
-
 function altitude_azimuth(J_whole: number, J_frac: number, lon_rad_inner: number, sin_lat: number, cos_lat: number): Sun.SkyCoord {
     'use gpu';
 
@@ -62,7 +61,7 @@ function altitude_azimuth(J_whole: number, J_frac: number, lon_rad_inner: number
 
     const h = std.asin(sin_lat * std.sin(delta) + cos_lat * std.cos(delta) * std.cos(H));
 
-    return Sun.SkyCoordSchema({ azimuth: std.degrees(A), altitude: std.degrees(h) });
+    return { azimuth: std.degrees(A), altitude: std.degrees(h) };
 }
 
 namespace Sun {
@@ -120,6 +119,40 @@ namespace Sun {
         );
 
         program.dispatchThreads(288, 365);
+
+        return output_grid;
+    }
+
+    export function grid_cpu(params: Params) {
+        let start_time = Temporal.Instant.from(params.start_time + "Z");
+        if (!params.utc) {
+            const offset = Math.trunc(params.geo.lon / 360 * 24 * 60); // number of minutes to offset
+            start_time = start_time.add(Temporal.Duration.from("PT" + offset + "M"));
+        }
+
+        const J_0 = julian_date(start_time);
+        const J_0_whole = Math.trunc(J_0);
+        const J_0_frac = J_0 - J_0_whole;
+
+        const step_size = d.f32(1 / 288);
+
+        const lon = std.radians(params.geo.lon);
+        const sin_lat = std.sin(std.radians(params.geo.lat));
+        const cos_lat = std.cos(std.radians(params.geo.lat));
+
+        let output_grid: SkyCoord[][] = Array();
+
+        for (const day of Array(365).keys()) { // ToDo: fix issue where all days seem to be the same
+            let col: SkyCoord[] = Array();
+            const J_whole = J_0_whole + d.i32(day);
+
+            for (const step of Array(288).keys()) {
+                const J_frac = J_0_frac + step_size * d.f32(step);
+                const z = altitude_azimuth(J_whole, J_frac, d.f32(lon), d.f32(sin_lat), d.f32(cos_lat));
+                col.push(z);
+            }
+            output_grid.push(col);
+        }
 
         return output_grid;
     }

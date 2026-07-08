@@ -87,6 +87,18 @@ namespace Render {
         make_colors.dispatchThreads(288, 365);
         return await pixels.read();
     }
+
+    export function pixels_cpu(sun: Sun.SkyCoord[][], color_options: Params) {
+        let pixels: Uint32Array<ArrayBuffer> = new Uint32Array(365*288);
+
+        for (const day of Array(365).keys()) {
+            for (const step of Array(288).keys()) {
+                // swap indices because images are row major
+                pixels[step*365+day] = color_of(sun[day][step], color_options);
+            }
+        }
+        return pixels;
+    }
 }
 
 export default Render;
