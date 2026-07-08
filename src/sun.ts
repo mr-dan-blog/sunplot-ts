@@ -142,7 +142,7 @@ namespace Sun {
 
         let output_grid: SkyCoord[][] = Array();
 
-        for (const day of Array(365).keys()) { // ToDo: fix issue where all days seem to be the same
+        for (const day of Array(365).keys()) {
             let col: SkyCoord[] = Array();
             const J_whole = J_0_whole + d.i32(day);
 
