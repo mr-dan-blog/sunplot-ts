@@ -32,6 +32,7 @@ export const models: ModelDict = {
 }
 
 function clamp_pack(rgb: d.v3f) {
+    'use gpu';
     const srgba = d.vec4f(
         std.clamp(rgb.r, 0, 1),
         std.clamp(rgb.g, 0, 1),
@@ -56,9 +57,9 @@ function hsl_to_rgb(hsl: d.v3f) {
     const m = l - C / 2;
 
     const band = std.ceil(h_prime) % 6;
-
+    
     let srgb = d.vec3f(m, m, m);
-    srgb[band / 2] += C;
+    srgb[std.floor(band / 2)] += C;
     srgb[(5 - band) % 3] += X;
 
     return clamp_pack(srgb);
