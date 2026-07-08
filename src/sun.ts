@@ -19,16 +19,10 @@ const C_3 = std.radians(0.0003);
 
 const Pi_earth = std.radians(102.9373); // ecliptic longitude of Earth's perihelion
 
-// constants for calculating right ascension
-const A_2 = std.radians(-2.4657);
-const A_4 = std.radians(0.0529);
-const A_6 = std.radians(-0.0014);
-
-// constants for calculating declination
-const D_1 = std.radians(22.7908);
-const D_3 = std.radians(0.5991);
-const D_5 = std.radians(0.0492);
-
+// constants for calculating declination and right ascension
+const epsilon = std.radians(23.4393);
+const sin_epsilon = std.sin(epsilon);
+const cos_epsilon = std.cos(epsilon);
 
 const theta_0 = std.radians(280.1470); // siderial time angle on January 1, 2000
 const theta_1 = std.radians(360.9856235); // slope of siderial time
@@ -51,9 +45,11 @@ function altitude_azimuth(J_whole: number, J_frac: number, lon_rad_inner: number
     const M = wrap(M_0 + M_1 * d.f32(J_whole) + M_1 * J_frac); // mean anomaly
     const nu = M + C_1 * std.sin(M) + C_2 * std.sin(2 * M) + C_3 * std.sin(3 * M); // true anomaly
     const lambda = wrap(nu + Pi_earth + Math.PI); // ecliptical longitude
-    const alpha = lambda + A_2 * std.sin(2 * lambda) + A_4 * std.sin(4 * lambda) + A_6 * std.sin(6 * lambda); // right ascension
+
     const s = std.sin(lambda);
-    const delta = (D_1 * s) + (D_3 * s ** 3) + (D_5 * s ** 5); // declination
+    const alpha = std.atan2(s * cos_epsilon, std.cos(lambda)); // right ascension
+    const delta = std.asin(s * sin_epsilon); // declination
+
     const theta = wrap(theta_0 + theta_1_frac * d.f32(J_whole) + theta_1 * J_frac - lon_rad_inner); //siderial time
     const H = theta - alpha;
 
