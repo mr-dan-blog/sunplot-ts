@@ -1,5 +1,6 @@
 
 import { d, type TgpuRoot } from "typegpu";
+
 import Sun from "./sun";
 import { OkHSL, HSL, OkHSV } from "./color_models";
 
@@ -89,12 +90,12 @@ namespace Render {
     }
 
     export function pixels_cpu(sun: Sun.SkyCoord[][], color_options: Params) {
-        let pixels: Uint32Array<ArrayBuffer> = new Uint32Array(365*288);
+        let pixels: Uint32Array<ArrayBuffer> = new Uint32Array(365 * 288);
 
         for (const day of Array(365).keys()) {
             for (const step of Array(288).keys()) {
                 // swap indices because images are row major
-                pixels[step*365+day] = color_of(sun[day][step], color_options);
+                pixels[step * 365 + day] = color_of(sun[day][step], color_options);
             }
         }
         return pixels;
