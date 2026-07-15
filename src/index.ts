@@ -15,13 +15,23 @@ async function calculate_sun() {
     }
 }
 
-async function draw() {
-    // const start = performance.now();
-
+function draw() {
     if (!all_valid()) {
         console.debug("invalid parameter")
         return;
     }
+
+    if (GPU == null) {
+        loading.removeAttribute("hidden");
+    }
+
+    requestAnimationFrame(() => {
+        setTimeout(draw_inner, 0);
+    });
+}
+
+async function draw_inner() {
+    // const start = performance.now();
 
     let packed: Uint32Array<ArrayBuffer>;
     if (GPU != null) {
@@ -37,9 +47,14 @@ async function draw() {
     // console.debug("calculated colors in", (end - start).toFixed(1), "ms");
 
     ctx.putImageData(data, 0, 0);
+    loading.setAttribute("hidden", "hidden");
 }
 
 async function calculate_and_draw() {
+    if (GPU == null) {
+        loading.removeAttribute("hidden");
+    }
+
     // const start = performance.now();
 
     await calculate_sun();
@@ -108,9 +123,7 @@ function update_colors(field: string, render?: boolean) {
     refresh_brightness(color_params);
 
     if (render) {
-        requestAnimationFrame(() => {
-            setTimeout(draw, 0);
-        });
+        draw();
     }
 }
 
@@ -128,6 +141,7 @@ try {
 } catch (error) {
     console.log("WebGPU not available. Falling back to CPU implementation. Expect slow rendering.");
 }
+const loading = document.getElementById("loading") as HTMLDivElement;
 const canvas = document.getElementById("output_canvas") as HTMLCanvasElement;
 const ctx = canvas.getContext('2d', { alpha: false })!;
 
@@ -149,11 +163,13 @@ astro_fields.concat(color_fields).forEach((id) => {
 });
 
 function set_onchange() {
+    const event = (GPU == null) ? "change" : "input";
+
     astro_fields.forEach((field) => {
-        fields[field].addEventListener("input", () => { update_astronomy(field, true) }, { passive: true });
+        fields[field].addEventListener(event, () => { update_astronomy(field, true) }, { passive: true });
     });
     color_fields.forEach((field) => {
-        fields[field].addEventListener("input", () => { update_colors(field, true) }, { passive: true });
+        fields[field].addEventListener(event, () => { update_colors(field, true) }, { passive: true });
     });
 }
 
