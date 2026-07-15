@@ -25,10 +25,10 @@ async function draw() {
 
     let packed: Uint32Array<ArrayBuffer>;
     if (GPU != null) {
-        let pixels = await Render.pixels(calculated_grid, color_params, GPU);
+        const pixels = await Render.pixels(calculated_grid, color_params, GPU);
         packed = new Uint32Array(pixels.flat().flat());
     } else {
-       packed = Render.pixels_cpu(calculated_grid_cpu, color_params);
+        packed = Render.pixels_cpu(calculated_grid_cpu, color_params);
     }
     const unpacked = new Uint8ClampedArray(packed.buffer);
     const data = new ImageData(unpacked, 365);
@@ -36,9 +36,7 @@ async function draw() {
     // const end = performance.now();
     // console.debug("calculated colors in", (end - start).toFixed(1), "ms");
 
-    requestAnimationFrame(() => {
-        ctx.putImageData(data, 0, 0);
-    });
+    ctx.putImageData(data, 0, 0);
 }
 
 async function calculate_and_draw() {
@@ -108,8 +106,11 @@ function update_colors(field: string, render?: boolean) {
     }
 
     refresh_brightness(color_params);
+
     if (render) {
-        draw();
+        requestAnimationFrame(() => {
+            setTimeout(draw, 0);
+        });
     }
 }
 
