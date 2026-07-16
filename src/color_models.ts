@@ -233,6 +233,8 @@ namespace OK {
                         lms[0], lmsdt[0], lmsdt2[0],
                         lms[1], lmsdt[1], lmsdt2[1],
                         lms[2], lmsdt[2], lmsdt2[2]
+                    // const rgb_mat = std.transpose( // this version will work once PR is accepted at https://github.com/software-mansion/TypeGPU/pull/2737
+                    //     d.mat3x3f(lms, lmsdt, lmsdt2)
                     ).mul(
                         d.mat3x3f(
                             4.0767416621, -3.3077115913, 0.2309699292, // r coefficients
