@@ -32,7 +32,7 @@ namespace Render {
         else return 1;
     }
 
-    function color_of(coord: Sun.SkyCoord, params: Params) {
+    export function color_of(coord: Sun.SkyCoord, params: Params) {
         'use gpu';
 
         let lightness = coord.altitude / 180 + 0.5;
@@ -99,6 +99,37 @@ namespace Render {
             }
         }
         return pixels;
+    }
+
+    let workers: Worker[] = Array(4);
+
+    export function init_workers() {
+        for (const slot of workers.keys()) {
+            workers[slot] = new Worker(
+                /* webpackChunkName: "render_worker" */ new URL("./render_worker.ts", import.meta.url)
+            );
+        }
+    }
+
+    export async function pixels_ww(sun: Sun.SkyCoord[][], color_options: Params) {
+        let promises: Promise<Uint32Array<ArrayBuffer>>[] = Array(4);
+
+        for (const chunk of Array(4).keys()) {
+            workers[chunk].postMessage({
+                sun: sun,
+                color_options: color_options,
+                chunk: chunk
+            });
+
+            promises[chunk] = new Promise( (resolve) => {
+                workers[chunk].onmessage = (m) => resolve(m.data);
+            });
+        }
+
+        let pixels = await Promise.all(promises);
+        let pixels_flat = Uint32Array.from(pixels.reduce((prev, curr) => Uint32Array.from([...prev, ...curr])));
+
+        return pixels_flat;
     }
 }
 

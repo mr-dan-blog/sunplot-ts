@@ -6,22 +6,22 @@ import { models } from "./color_models";
 import { refresh_brightness } from "./brightness";
 import "./sunplot.css";
 
-
 async function calculate_sun() {
-    if (GPU != null) {
-        calculated_grid = await Sun.grid(astro_params, GPU);
-    } else {
-        calculated_grid_cpu = Sun.grid_cpu(astro_params);
+    switch (mode) {
+        case Mode.Gpu:
+            calculated_grid = await Sun.grid(astro_params, GPU!);
+            break;
+        default:
+            calculated_grid_cpu = Sun.grid_cpu(astro_params);
     }
 }
 
 function draw() {
     if (!all_valid()) {
-        console.debug("invalid parameter")
         return;
     }
 
-    if (GPU == null) {
+    if (mode != Mode.Gpu) {
         loading.removeAttribute("hidden");
     }
 
@@ -34,11 +34,17 @@ async function draw_inner() {
     // const start = performance.now();
 
     let packed: Uint32Array<ArrayBuffer>;
-    if (GPU != null) {
-        const pixels = await Render.pixels(calculated_grid, color_params, GPU);
-        packed = new Uint32Array(pixels.flat().flat());
-    } else {
-        packed = Render.pixels_cpu(calculated_grid_cpu, color_params);
+
+    switch (mode) {
+        case Mode.Gpu:
+            const pixels = await Render.pixels(calculated_grid, color_params, GPU!);
+            packed = new Uint32Array(pixels.flat().flat());
+            break;
+        case Mode.WebWorker:
+            packed = await Render.pixels_ww(calculated_grid_cpu, color_params);
+            break;
+        case Mode.SingleThread:
+            packed = Render.pixels_cpu(calculated_grid_cpu, color_params);
     }
     const unpacked = new Uint8ClampedArray(packed.buffer);
     const data = new ImageData(unpacked, 365);
@@ -51,7 +57,7 @@ async function draw_inner() {
 }
 
 async function calculate_and_draw() {
-    if (GPU == null) {
+    if (mode != Mode.Gpu) {
         loading.removeAttribute("hidden");
     }
 
@@ -134,12 +140,29 @@ function all_valid() {
     }).every(b => b);
 }
 
+enum Mode {
+    Gpu,
+    WebWorker,
+    SingleThread
+}
+
+let mode: Mode;
+
 let GPU: TgpuRoot | null = null;
 try {
     GPU = await tgpu.init();
     document.getElementById("percentage_gag")!.textContent = "Infinity";
+    mode = Mode.Gpu;
 } catch (error) {
-    console.log("WebGPU not available. Falling back to CPU implementation. Expect slow rendering.");
+    console.log("WebGPU not available. Falling back to CPU implementation.");
+    if (window.Worker) {
+        console.log("Using Web Workers. Expect slower performance.");
+        mode = Mode.WebWorker;
+        Render.init_workers();
+    } else {
+        console.log("Web Workers also unavailable. Expect slow performance.");
+        mode = Mode.SingleThread
+    }
 }
 const loading = document.getElementById("loading") as HTMLDivElement;
 const canvas = document.getElementById("output_canvas") as HTMLCanvasElement;
@@ -163,7 +186,7 @@ astro_fields.concat(color_fields).forEach((id) => {
 });
 
 function set_onchange() {
-    const event = (GPU == null) ? "change" : "input";
+    const event = (mode == Mode.Gpu) ? "input" : "change";
 
     astro_fields.forEach((field) => {
         fields[field].addEventListener(event, () => { update_astronomy(field, true) }, { passive: true });
