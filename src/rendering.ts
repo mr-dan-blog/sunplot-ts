@@ -48,7 +48,7 @@ namespace Render {
         } else if (params.model === HSL.ID) {
             rgba = HSL.toRgb(d.vec3f(hue, 0.9, lightness))
         } else {
-            rgba = OkHSV.toRgb(d.vec3f(hue, 0.9, lightness));
+            rgba = OkHSV.toRgb(d.vec3f(hue, 1.0, lightness));
         }
         return rgba;
     }

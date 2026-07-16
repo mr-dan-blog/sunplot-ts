@@ -48,7 +48,8 @@ function hsl_to_rgb(hsl: d.v3f) {
     'use gpu';
 
     const h = hsl[0];
-    const s = hsl[1];
+    // const s = hsl[1];
+    const s = 0.9;
     const l = hsl[2];
 
     const C = (1 - std.abs(2 * l - 1)) * s // chroma
@@ -57,8 +58,8 @@ function hsl_to_rgb(hsl: d.v3f) {
     const m = l - C / 2;
 
     const band = std.ceil(h_prime) % 6;
-    
-    let srgb = d.vec3f(m, m, m);
+
+    let srgb = d.vec3f(m);
     srgb[std.floor(band / 2)] += C;
     srgb[(5 - band) % 3] += X;
 
@@ -83,6 +84,7 @@ function okhsv_to_rgb(hsl: d.v3f) {
 function srgb_gamma(linear: d.v3f) {
     'use gpu';
     const gamma_inv = 1 / 2.4;
+
     return d.vec3f(
         1.055 * std.pow(linear.r, gamma_inv) - 0.055,
         1.055 * std.pow(linear.g, gamma_inv) - 0.055,
@@ -92,30 +94,29 @@ function srgb_gamma(linear: d.v3f) {
 
 // Derived from https://github.com/bottosson/bottosson.github.io/blob/master/misc/colorpicker/colorconversion.js
 namespace OK {
+    const lab_to_lms = d.mat3x3f( // Lab to lms
+        0.99999999845051981432, 0.39633779217376785678, 0.21580375806075880339,
+        1.0000000088817607767, -0.1055613423236563494, -0.063854174771705903402,
+        1.0000000546724109177, -0.089484182094965759684, -1.2914855378640917399
+    );
+    const lms_to_xyz = d.mat3x3f( // lms to xyz
+        1.2268798733741557, -0.5578149965554813, 0.28139105017721583,
+        -0.04057576262431372, 1.1122868293970594, -0.07171106666151701,
+        -0.07637294974672142, -0.4214933239627914, 1.5869240244272418
+    );
+    const xyz_to_linear_srgb = d.mat3x3f( // xyz to linear srgb
+        3.2409699419045226, -1.537383177570094, -0.4986107602930034,
+        -0.9692436362808796, 1.8759675015077202, 0.04155505740717559,
+        0.05563007969699366, -0.20397695888897652, 1.0569715142428786
+    );
+    const lms_to_linear_srgb = lms_to_xyz.mul(xyz_to_linear_srgb);
+
     export function oklab_to_linear_srgb(Lab: d.v3f) {
         'use gpu';
 
-        let lms = Lab.mul(
-            d.mat3x3f( // Lab to lms
-                0.99999999845051981432, 0.39633779217376785678, 0.21580375806075880339,
-                1.0000000088817607767, -0.1055613423236563494, -0.063854174771705903402,
-                1.0000000546724109177, -0.089484182094965759684, -1.2914855378640917399
-            )
-        );
-        lms = lms.mul(lms).mul(lms); // cube each component
-        return lms.mul(
-            d.mat3x3f( // lms to xyz
-                1.2268798733741557, -0.5578149965554813, 0.28139105017721583,
-                -0.04057576262431372, 1.1122868293970594, -0.07171106666151701,
-                -0.07637294974672142, -0.4214933239627914, 1.5869240244272418
-            )
-        ).mul(
-            d.mat3x3f( // xyz to linear srgb
-                3.2409699419045226, -1.537383177570094, -0.4986107602930034,
-                -0.9692436362808796, 1.8759675015077202, 0.04155505740717559,
-                0.05563007969699366, -0.20397695888897652, 1.0569715142428786
-            )
-        );
+        let lms = Lab.mul(lab_to_lms);
+        return lms.mul(lms).mul(lms) // cube each component
+            .mul(lms_to_linear_srgb)
     }
 
     function toe_inv(x: number) {
@@ -144,7 +145,8 @@ namespace OK {
             k0 = 0.73956515; k1 = -0.45954404; k2 = 0.08285427; k3 = 0.12541070; k4 = 0.14503204;
             wlms = d.vec3f(-1.2684380046, 2.6097574011, -0.3413193965);
         }
-        // else: blue component
+        // else: using blue default above
+
         // Approximate max saturation using a polynomial:
         let S = k0 + (k1 * a) + (k2 * b) + (k3 * a * a) + (k4 * a * b);
 
@@ -227,34 +229,33 @@ namespace OK {
                     const lmsdt = lms_dt.mul(lms_).mul(lms_).mul(3.0);
                     const lmsdt2 = lms_dt.mul(lms_dt).mul(lms_).mul(6.0);
 
+                    const rgb_mat = d.mat3x3f( // std.transpose has no CPU fallback
+                        lms[0], lmsdt[0], lmsdt2[0],
+                        lms[1], lmsdt[1], lmsdt2[1],
+                        lms[2], lmsdt[2], lmsdt2[2]
+                    ).mul(
+                        d.mat3x3f(
+                            4.0767416621, -3.3077115913, 0.2309699292, // r coefficients
+                            -1.2684380046, 2.6097574011, -0.3413193965, // g
+                            -0.0041960863, -0.7034186147, 1.7076147010 // b
+                        )
+                    );
+
                     let u_rgb = d.vec3f();
                     let t_rgb = d.vec3f();
 
-                    let r = d.vec3f(4.0767416621, - 3.3077115913, 0.2309699292).mul(
-                        d.mat3x3f(lms, lmsdt, lmsdt2)
-                    );
-                    r[0] -= 1;
-                    u_rgb.r = r[1] / (r[1] * r[1] - 0.5 * r[0] * r[2]);
-                    t_rgb.r = -r[0] * u_rgb.r;
+                    for (const i of std.range(3)) {
+                        let v = d.vec3f(rgb_mat.columns[i]) // data for one color channel
+                        v[0] -= 1;
+                        u_rgb[i] = v[1] / (v[1] * v[1] - 0.5 * v[0] * v[2]);
+                        t_rgb[i] = -v[0] * u_rgb[i];
+                    }
 
-                    let g = d.vec3f(-1.2684380046, 2.6097574011, -0.3413193965).mul(
-                        d.mat3x3f(lms, lmsdt, lmsdt2)
+                    t_rgb = std.select(
+                        t_rgb,
+                        d.vec3f(10e5),
+                        std.le(u_rgb, d.vec3f(0))
                     );
-                    g[0] -= 1;
-                    u_rgb.g = g[1] / (g[1] * g[1] - 0.5 * g[0] * r[2]);
-                    t_rgb.g = -g[0] * u_rgb.g;
-
-                    let b = d.vec3f(-0.0041960863, -0.7034186147, 1.7076147010).mul(
-                        d.mat3x3f(lms, lmsdt, lmsdt2)
-                    );
-                    b[0] -= 1;
-                    u_rgb.b = b[1] / (b[1] * b[1] - 0.5 * b[0] * b[2]);
-                    t_rgb.b = -b[0] * u_rgb.b;
-
-                    // tried to do with vector math. Couldn't cast v3b to v3f
-                    t_rgb.r += d.f32(u_rgb.r <= 0) * 10e5;
-                    t_rgb.g += d.f32(u_rgb.g <= 0) * 10e5;
-                    t_rgb.b += d.f32(u_rgb.b <= 0) * 10e5;
 
                     t += std.min(t_rgb.r, t_rgb.g, t_rgb.b);
                 }
@@ -314,84 +315,75 @@ namespace OK {
     export function okhsv_to_oklab(hsv: d.v3f) {
         'use gpu';
         const h = hsv[0];
-        const s = hsv[1];
+        // const s = hsv[1]; // always 1.0
         const v = hsv[2];
 
         const a_ = std.cos(2 * Math.PI * h / 360);
         const b_ = std.sin(2 * Math.PI * h / 360);
 
         const cusp = find_cusp(a_, b_);
-        const S_max = cusp[1] / cusp[0]; // C/L
-        const T_max = cusp[1] / (1 - cusp[0]); // C/(1-L)
-        const S_0 = d.f32(0.5);
-        const k = 1 - S_0 / S_max;
+        // const S_max = cusp[1] / cusp[0]; // C/L
+        // const T_max = cusp[1] / (1 - cusp[0]); // C/(1-L)
+        // const S_0 = d.f32(0.5);
+        // const k = 1 - S_0 / S_max;
 
 
         // L, C when v==1:
-        const L_v = 1 - s * S_0 / (S_0 + T_max - T_max * k * s);
-        const C_v = s * T_max * S_0 / (S_0 + T_max - T_max * k * s);
+        // const L_v = 1 - s * S_0 / (S_0 + T_max - T_max * k * s);
+        // const C_v = s * T_max * S_0 / (S_0 + T_max - T_max * k * s);
+        const L_cusp = cusp[0];
+        const C_cusp = cusp[1];
 
-        let L = v * L_v;
-        let C = v * C_v;
+        let L = v * L_cusp;
+        let C = v * C_cusp;
 
-        const L_vt = toe_inv(L_v);
-        const C_vt = C_v * L_vt / L_v;
+        const L_vt = toe_inv(L_cusp);
+        const C_vt = C_cusp * L_vt / L_cusp;
+        const rgb_scale = oklab_to_linear_srgb(d.vec3f(L_vt, a_ * C_vt, b_ * C_vt));
 
-        const L_new = toe_inv(L);
+        const scale_L = std.pow(std.max(rgb_scale.r, rgb_scale.g, rgb_scale.b), -1 / 3);
+
+        const L_new = toe_inv(L) * scale_L;
         C = C * L_new / L;
         L = L_new;
 
-        const rgb_scale = oklab_to_linear_srgb(d.vec3f(L_vt, a_ * C_vt, b_ * C_vt));
-        const scale_L = std.pow(std.max(rgb_scale.r, rgb_scale.g, rgb_scale.b), -1 / 3);
-
-        return d.vec3f(L * scale_L, C * scale_L * a_, C * scale_L * b_);
+        return d.vec3f(L, C * a_, C * b_);
     }
 
     export function okhsl_to_oklab(hsl: d.v3f) {
         'use gpu';
         const h = hsl[0];
-        const s = hsl[1];
+        // const s = hsl[1]; // always 0.9
         const l = hsl[2];
-        if (l === 1.0) {
-            return d.vec3f(1, 0, 0);
+
+        if (l % 1 === 0.0) { // l is 0 or 1
+            return d.vec3f(l, 0, 0);
         }
 
-        else if (l === 0.0) {
-            return d.vec3f(0, 0, 0);
-        }
+        const a_ = std.cos(std.radians(h));
+        const b_ = std.sin(std.radians(h));
+        const L = toe_inv(l);
 
-        let a_ = std.cos(2 * Math.PI * h / 360);
-        let b_ = std.sin(2 * Math.PI * h / 360);
-        let L = toe_inv(l);
+        const Cs = get_Cs(L, a_, b_);
+        const C_0 = Cs[0];
+        const C_mid = Cs[1];
+        const C_max = Cs[2];
 
-        let Cs = get_Cs(L, a_, b_);
-        let C_0 = Cs[0];
-        let C_mid = Cs[1];
-        let C_max = Cs[2];
+        // if (s < 0.8) { // given default s = 0.9, never actually used
+        //     t = 1.25 * s;
+        //     k_0 = 0;
+        //     k_1 = 0.8 * C_0;
+        //     k_2 = (1 - k_1 / C_mid);
+        // }
+        // else {
+        const t = 0.5; // t = 5.0 * (s - 0.8);
+        const k_0 = C_mid;
+        const k_1 = 0.3125 * C_mid * C_mid / C_0; // k_1 = 0.2 * C_mid * C_mid * 1.25 * 1.25 / C_0;
+        const k_2 = (1.0 - (k_1) / (C_max - C_mid));
+        // }
 
-        let t = d.f32(0);
-        let k_0 = d.f32(0);
-        let k_1 = d.f32(0);
-        let k_2 = d.f32(0);
-        if (s < 0.8) { // given default s=0.9, never actually used
-            t = 1.25 * s;
-            k_0 = 0;
-            k_1 = 0.8 * C_0;
-            k_2 = (1 - k_1 / C_mid);
-        }
-        else {
-            t = 5.0 * (s - 0.8);
-            k_0 = C_mid;
-            k_1 = 0.2 * C_mid * C_mid * 1.25 * 1.25 / C_0;
-            k_2 = (1.0 - (k_1) / (C_max - C_mid));
-        }
+        const C = k_0 + t * k_1 / (1.0 - k_2 * t);
 
-        let C = k_0 + t * k_1 / (1.0 - k_2 * t);
-
-        // If we would only use one of the Cs:
-        //C = s*C_0;
-        //C = s*1.25*C_mid;
-        //C = s*C_max;
         return d.vec3f(L, C * a_, C * b_);
     }
 }
