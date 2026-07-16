@@ -18,18 +18,18 @@
     "html-webpack-plugin": "^5.6.7",
     "mini-css-extract-plugin": "^2.10.2",
     "style-loader": "^4.0.0",
-    "ts-loader": "^9.6.0",
+    "ts-loader": "^9.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
     "unplugin-starter": "^0.1.0",
-    "unplugin-typegpu": "^0.11.5",
-    "webpack": "^5.107.2",
-    "webpack-cli": "^7.0.3",
-    "webpack-dev-server": "^5.2.4"
+    "unplugin-typegpu": "^0.11.6",
+    "webpack": "^5.108.4",
+    "webpack-cli": "^7.2.1",
+    "webpack-dev-server": "^5.2.6"
   },
   "dependencies": {
     "temporal-polyfill": "^1.0.1",
-    "typegpu": "^0.11.8"
+    "typegpu": "^0.11.9"
   },
   "packageManager": "pnpm@11.10.0+sha512.0b7f8b98060031904c017e3a41eb187a16d40eeb829b95c4f8cb03681761fc4ab53dd219115b9b447f4dce1a05a214764461e7d3703392a9f32f9511ce8c86c8"
 }
