@@ -105,7 +105,7 @@ namespace Sun {
         const output_grid = GPU.createMutable(SkyGridSchema);
 
         const program = GPU.createGuardedComputePipeline(
-            (step, day) => {
+            (step:number, day:number) => {
                 'use gpu';
                 const J_whole = J_0_whole + d.i32(day);
                 const J_frac = J_0_frac + step_size * d.f32(step);
