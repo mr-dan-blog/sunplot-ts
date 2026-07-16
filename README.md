@@ -1,15 +1,3 @@
-# 🚀 Welcome to your new awesome project!
+A site to create beautiful graphs of the sun's position in the sky.
 
-This project has been created using **create-webpack-app**, you can now run
-
-```bash
-npm run build
-```
-
-or
-
-```bash
-yarn build
-```
-
-to bundle your application
+Try it out at [mr-dan-blog.github.io/sunplot](https://mr-dan-blog.github.io/sunplot).
