@@ -18,7 +18,8 @@ const stylesHandler = isProduction ? MiniCssExtractPlugin.loader : "style-loader
 const config: Configuration = {
     entry: {
         main: {import: "./src/index.ts", dependOn: "sun"},
-        "sun": ["./src/sun.ts"],
+        "sun": {import: "./src/sun.ts", dependOn: "Temporal"},
+        "Temporal": ["./node_modules/temporal-polyfill"]
     },
     output: {
         path: path.resolve(__dirname, "dist/sunplot"),
