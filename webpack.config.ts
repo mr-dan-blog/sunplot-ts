@@ -17,8 +17,8 @@ const stylesHandler = isProduction ? MiniCssExtractPlugin.loader : "style-loader
 /** @type {import("webpack").Configuration} */
 const config: Configuration = {
     entry: {
-        main: {import: "./src/index.ts", dependOn: "sun"},
-        "sun": {import: "./src/sun.ts", dependOn: "Temporal"},
+        main: { import: "./src/index.ts", dependOn: "sun" },
+        "sun": { import: "./src/sun.ts", dependOn: "Temporal" },
         "Temporal": ["./node_modules/temporal-polyfill"]
     },
     output: {
