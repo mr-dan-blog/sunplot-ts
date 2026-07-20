@@ -1,3 +1,5 @@
+@import "stylesheet/main.css";
+
 #canvas-frame {
     justify-content: center;
     position: sticky;
