@@ -43,6 +43,10 @@
     margin-bottom: 1rem;
 }
 
+label>code {
+    padding-left: 0;
+}
+
 svg {
     text {
         fill: var(--muted);
