@@ -39,7 +39,7 @@
                                           pattern="-?\d?\d(\.\d+)?"
                                           inputmode="decimal"
                                           required
-                                          class="coord" />
+                                          class="coord altitude" />
                                    <label for="lat">
                                           <code>°N</code>
                                    </label>
@@ -52,7 +52,7 @@
                                           pattern="-?1?\d?\d(\.\d+)?"
                                           inputmode="decimal"
                                           required
-                                          class="coord" />
+                                          class="coord altitude" />
                                    <label for="lon">
                                           <code>°W</code>
                                    </label>
@@ -82,9 +82,9 @@
                             Color model:
                             <select name="model"
                                    id="model">
-                                   <option>HSL</option>
                                    <option>Okhsl</option>
                                    <option>Okhsv</option>
+                                   <option>HSL</option>
                             </select>
                      </div>
 
@@ -118,15 +118,19 @@
                      <div style="display: flex; flex-wrap: wrap;">
                             <div>
                                    <div class="flex-row row">
-                                          <input name="white"
-                                                 id="white"
-                                                 type="number"
-                                                 value="0.95"
-                                                 min="0.5"
-                                                 max="1.00"
-                                                 step="0.01"
-                                                 inputmode="decimal"
-                                                 required />
+                                          <span>
+                                                 <input name="white"
+                                                        id="white"
+                                                        type="number"
+                                                        value="81"
+                                                        min="0"
+                                                        max="90"
+                                                        step="1"
+                                                        inputmode="decimal"
+                                                        class="degrees"
+                                                        required />
+                                                 <label for="white"><code>°</code></label>
+                                          </span>
                                           White ceiling
                                    </div>
                                    <div class="flex-row row">
@@ -142,15 +146,19 @@
                                           Min. daytime brightness
                                    </div>
                                    <div class="flex-row row">
-                                          <input name="gap"
-                                                 id="gap"
-                                                 type="number"
-                                                 value="0.05"
-                                                 min="0.00"
-                                                 max="1.00"
-                                                 step="0.01"
-                                                 inputmode="decimal"
-                                                 required />
+                                          <span>
+                                                 <input name="gap"
+                                                        id="gap"
+                                                        type="number"
+                                                        value="9"
+                                                        min="0"
+                                                        max="180"
+                                                        step="1"
+                                                        inputmode="decimal"
+                                                        class="degrees"
+                                                        required />
+                                                 <label for="gap"><code>°</code></label>
+                                          </span>
                                           Day-night transition width
                                    </div>
                                    <div class="flex-row row">
@@ -166,15 +174,19 @@
                                           Max. nighttime brightness
                                    </div>
                                    <div class="flex-row row">
-                                          <input name="black"
-                                                 id="black"
-                                                 type="number"
-                                                 value="0.0"
-                                                 min="0.0"
-                                                 max="0.5"
-                                                 step="0.01"
-                                                 inputmode="decimal"
-                                                 required />
+                                          <span>
+                                                 <input name="black"
+                                                        id="black"
+                                                        type="number"
+                                                        value="-90"
+                                                        min="-90"
+                                                        max="0"
+                                                        step="1"
+                                                        inputmode="decimal"
+                                                        class="degrees"
+                                                        required />
+                                                 <label for="black"><code>°</code></label>
+                                          </span>
                                           Black floor
                                    </div>
                             </div>

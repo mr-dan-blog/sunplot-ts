@@ -95,16 +95,18 @@ function update_astronomy(field: string, render?: boolean) {
 
 function update_colors(field: string, render?: boolean) {
     switch (field) {
-        case "black":
-        case "white":
         case "hue_shift":
             color_params[field] = +fields[field].value;
             break;
+        case "black":
+        case "white":
+            color_params[field] = +fields[field].value / 180 + 0.5;
+            break;
         case "gap":
-            color_params.gap = +fields["gap"].value;
-            const offset = +(color_params.gap / 2).toFixed(2);
-            fields["black"].max = (0.5 - offset).toFixed(2);
-            fields["white"].min = (0.5 + offset).toFixed(2);
+            color_params.gap = +fields["gap"].value / 180;
+            const offset = +(+fields["gap"].value / 2);
+            fields["black"].max = (-offset).toFixed(0);
+            fields["white"].min = (offset).toFixed(0);
             break;
         case "day_min":
             color_params.day_min = +fields["day_min"].value;
