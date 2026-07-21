@@ -114,7 +114,7 @@ namespace OK {
     export function oklab_to_linear_srgb(Lab: d.v3f) {
         'use gpu';
 
-        let lms = Lab.mul(lab_to_lms);
+        const lms = Lab.mul(lab_to_lms);
         return lms.mul(lms).mul(lms) // cube each component
             .mul(lms_to_linear_srgb)
     }
@@ -195,13 +195,11 @@ namespace OK {
         'use gpu';
 
         // Find the intersection for upper and lower half seprately
-        if (((L1 - L0) * cusp[1] - (cusp[0] - L0) * C1) <= 0.0) {
-            // Lower half
+        if (((L1 - L0) * cusp[1] - (cusp[0] - L0) * C1) <= 0.0) { // Lower half
             const t = cusp[1] * L0 / (C1 * cusp[0] + cusp[1] * (L0 - L1));
             return t;
         }
-        else {
-            // Upper half
+        else { // Upper half
             // First intersect with triangle
             let t = cusp[1] * (L0 - 1.0) / (C1 * (cusp[0] - 1.0) + cusp[1] * (L0 - L1));
 
@@ -324,15 +322,6 @@ namespace OK {
         const b_ = std.sin(2 * Math.PI * h / 360);
 
         const cusp = find_cusp(a_, b_);
-        // const S_max = cusp[1] / cusp[0]; // C/L
-        // const T_max = cusp[1] / (1 - cusp[0]); // C/(1-L)
-        // const S_0 = d.f32(0.5);
-        // const k = 1 - S_0 / S_max;
-
-
-        // L, C when v==1:
-        // const L_v = 1 - s * S_0 / (S_0 + T_max - T_max * k * s);
-        // const C_v = s * T_max * S_0 / (S_0 + T_max - T_max * k * s);
         const L_cusp = cusp[0];
         const C_cusp = cusp[1];
 
