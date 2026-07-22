@@ -32,29 +32,33 @@
                      <div class="flex-row row">
                             Coordinates:
                             <span>
-                                   <input name="latitude"
-                                          id="lat"
-                                          type="text"
-                                          value="42.4"
-                                          pattern="-?\d?\d(\.\d+)?"
-                                          inputmode="decimal"
-                                          required
-                                          class="coord altitude" />
+                                   <div class="degree-wrapper">
+                                          <input name="latitude"
+                                                 id="lat"
+                                                 type="text"
+                                                 value="42.4"
+                                                 pattern="-?\d?\d(\.\d+)?"
+                                                 inputmode="decimal"
+                                                 required
+                                                 class="coord" />
+                                   </div>
                                    <label for="lat">
-                                          <code>°N</code>
+                                          <code>N</code>
                                    </label>
                             </span>
                             <span>
-                                   <input name="longitude"
-                                          id="lon"
-                                          type="text"
-                                          value="71"
-                                          pattern="-?1?\d?\d(\.\d+)?"
-                                          inputmode="decimal"
-                                          required
-                                          class="coord altitude" />
+                                   <div class="degree-wrapper">
+                                          <input name="longitude"
+                                                 id="lon"
+                                                 type="text"
+                                                 value="71"
+                                                 pattern="-?1?\d?\d(\.\d+)?"
+                                                 inputmode="decimal"
+                                                 required
+                                                 class="coord" />
+                                   </div>
                                    <label for="lon">
-                                          <code>°W</code>
+                                          <code>W</code>
                                    </label>
                             </span>
                      </div>
@@ -97,7 +101,7 @@
 
                      <div class="flex-row row">
                             Shift hues by
-                            <span>
+                            <div class="degree-wrapper">
                                    <input name="hue_shift"
                                           id="hue_shift"
                                           type="number"
@@ -107,8 +111,7 @@
                                           step="15"
                                           inputmode="numeric"
                                           required />
-                                   <label for="hue_shift"><code>°</code></label>
-                            </span>
+                            </div>
                      </div>
               </details>
               <details class="card" open>
@@ -118,7 +121,7 @@
                      <div style="display: flex; flex-wrap: wrap;">
                             <div>
                                    <div class="flex-row row">
-                                          <span>
+                                          <div class="degree-wrapper">
                                                  <input name="white"
                                                         id="white"
                                                         type="number"
@@ -127,10 +130,8 @@
                                                         max="90"
                                                         step="1"
                                                         inputmode="decimal"
-                                                        class="degrees"
                                                         required />
-                                                 <label for="white"><code>°</code></label>
-                                          </span>
+                                          </div>
                                           White ceiling
                                    </div>
                                    <div class="flex-row row">
@@ -146,7 +147,7 @@
                                           Min. daytime brightness
                                    </div>
                                    <div class="flex-row row">
-                                          <span>
+                                          <div class="degree-wrapper">
                                                  <input name="gap"
                                                         id="gap"
                                                         type="number"
@@ -155,10 +156,8 @@
                                                         max="180"
                                                         step="1"
                                                         inputmode="decimal"
-                                                        class="degrees"
                                                         required />
-                                                 <label for="gap"><code>°</code></label>
-                                          </span>
+                                          </div>
                                           Day-night transition width
                                    </div>
                                    <div class="flex-row row">
@@ -174,7 +173,7 @@
                                           Max. nighttime brightness
                                    </div>
                                    <div class="flex-row row">
-                                          <span>
+                                          <div class="degree-wrapper">
                                                  <input name="black"
                                                         id="black"
                                                         type="number"
@@ -183,10 +182,8 @@
                                                         max="0"
                                                         step="1"
                                                         inputmode="decimal"
-                                                        class="degrees"
                                                         required />
-                                                 <label for="black"><code>°</code></label>
-                                          </span>
+                                          </div>
                                           Black floor
                                    </div>
                             </div>
