@@ -51,7 +51,7 @@ div.degree-wrapper {
     &::after {
         content: "°";
         color: var(--muted);
-        font-family: var(--font-code);
+        font-family: var(--font-mono);
         position: absolute;
         right: 2px;
         top: 2px;
